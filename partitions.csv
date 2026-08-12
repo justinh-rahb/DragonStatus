@@ -1,0 +1,7 @@
+# Stock Panda Status layout.  Keep this byte-for-byte compatible for stock-web-OTA.
+# Name,     Type, SubType, Offset,   Size
+nvs,        data, nvs,     0x9000,   0x3000,
+otadata,    data, ota,     0xc000,   0x2000,
+app0,       app,  ota_0,   0x10000,  0x1f0000,
+app1,       app,  ota_1,   0x200000, 0x1f0000,
+coredump,   data, coredump,0x3f0000, 0x1000,
