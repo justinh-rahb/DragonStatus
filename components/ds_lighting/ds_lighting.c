@@ -2,21 +2,45 @@
 #include "ds_board.h"
 #include "dc_lighting.h"
 #include "esp_log.h"
+#include "nvs.h"
+
+#define DS_LIGHT_NVS_NS "app_nvs"
+#define DS_LIGHT_NVS_KEY "ds_lighting"
+static ds_lighting_config_t s_config = { .enabled = true, .brightness = 128, .speed = 96 };
+
+void ds_lighting_get_config(ds_lighting_config_t *out) { if (out) *out = s_config; }
+
+esp_err_t ds_lighting_set_config(const ds_lighting_config_t *config)
+{
+    if (!config) return ESP_ERR_INVALID_ARG;
+    s_config = *config;
+    nvs_handle_t nvs;
+    if (nvs_open(DS_LIGHT_NVS_NS, NVS_READWRITE, &nvs) != ESP_OK) return ESP_FAIL;
+    esp_err_t err = nvs_set_blob(nvs, DS_LIGHT_NVS_KEY, &s_config, sizeof(s_config));
+    if (err == ESP_OK) err = nvs_commit(nvs);
+    nvs_close(nvs);
+    return err;
+}
 
 static const char *TAG = "ds_lighting";
 
 esp_err_t ds_lighting_start(void)
 {
+    nvs_handle_t nvs; size_t size = sizeof(s_config);
+    if (nvs_open(DS_LIGHT_NVS_NS, NVS_READONLY, &nvs) == ESP_OK) {
+        (void)nvs_get_blob(nvs, DS_LIGHT_NVS_KEY, &s_config, &size); nvs_close(nvs);
+    }
     dc_lighting_output_t outputs[DC_LIGHTING_MAX_OUTPUTS]; uint8_t count = 0;
     if (!ds_board_lighting_outputs(outputs, &count)) {
         ESP_LOGW(TAG, "RGB output disabled until board pinout is verified");
         return ESP_OK;
     }
-    return dc_lighting_start(&(dc_lighting_config_t){ .outputs = outputs, .output_count = count, .brightness = 128, .fps = 30 });
+    return dc_lighting_start(&(dc_lighting_config_t){ .outputs = outputs, .output_count = count, .brightness = s_config.brightness, .fps = 30 });
 }
 
 void ds_lighting_update(ds_printer_state_t state, float progress)
 {
+    if (!s_config.enabled) { (void)dc_lighting_off(); return; }
     dc_rgb_t color = {255, 255, 255}; dc_lighting_effect_t fx = DC_LIGHTING_SOLID;
     switch (state) {
     case DS_PRINTER_UNKNOWN:   color = (dc_rgb_t){0, 80, 255}; fx = DC_LIGHTING_FLOW; break;
@@ -29,5 +53,6 @@ void ds_lighting_update(ds_printer_state_t state, float progress)
     default: break;
     }
     (void)dc_lighting_set_progress(progress);
-    (void)dc_lighting_set(color, fx, 96);
+    if (s_config.effect) fx = (dc_lighting_effect_t)s_config.effect;
+    (void)dc_lighting_set(color, fx, s_config.speed);
 }
