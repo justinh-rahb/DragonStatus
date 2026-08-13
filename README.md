@@ -101,6 +101,30 @@ namespaces are specifically left alone until their binary formats are decoded.
 Never erase the full flash or overwrite the bootloader/partition table as part
 of normal DragonStatus installation.
 
+## Backing up a PopStatus safely
+
+Before anyone installs experimental firmware, make a stock backup. On a Linux
+or Raspberry Pi host with the device connected over USB:
+
+```sh
+git clone https://github.com/justinh-rahb/DragonStatus.git
+cd DragonStatus
+./scripts/backup-pop-status.sh /dev/ttyUSB0
+```
+
+Use `/dev/ttyACM0` instead when that is the device's serial port. The script
+only reads the ESP32-C3: it makes a verified private 4 MiB recovery image and a
+second `-nvs-redacted.bin` copy for sharing with us. The redacted copy has the
+whole NVS partition cleared, removing Wi-Fi/Bambu credentials and any other
+stored NVS values. Never send the private full image.
+
+On Raspberry Pi OS/Debian, first install the reader with
+`sudo apt install python3-esptool`. If Linux reports serial-port permission
+errors, add the current user to `dialout` (`sudo usermod -aG dialout "$USER"`)
+and sign out and back in. The script does not write, erase, or reset flash on
+the device. The NVS-redacted copy is intentionally not an exact restore image:
+keep the private full backup somewhere safe.
+
 ## Building
 
 Prerequisites:
