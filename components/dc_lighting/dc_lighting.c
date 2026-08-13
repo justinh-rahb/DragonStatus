@@ -12,6 +12,7 @@ static led_strip_handle_t s_strip[DC_LIGHTING_MAX_OUTPUTS];
 static dc_lighting_output_t s_output[DC_LIGHTING_MAX_OUTPUTS];
 static uint8_t s_count, s_brightness = 255, s_fps = 30, s_speed;
 static float s_progress = -1.0f;
+static float s_audio_level;
 static dc_rgb_t s_color;
 static dc_lighting_effect_t s_effect;
 static SemaphoreHandle_t s_lock;
@@ -79,6 +80,18 @@ static void frame(uint32_t tick)
                 c = lit ? base : (dc_rgb_t){0, 0, 0};
                 pixel_level = lit ? s_brightness : 255;
             }
+            if (s_effect == DC_LIGHTING_AUDIO_METER) {
+                /* OEM Music behaviour is a left-to-right meter: a quiet room
+                 * leaves a short blue bar, then both its length and hue move
+                 * through cyan, green, yellow, orange and red as it rises. */
+                float meter = s_audio_level;
+                uint16_t lit = meter <= 0.0f ? 0 : (uint16_t)(meter * s_output[i].pixels + 0.999f);
+                bool on = p < lit;
+                /* HSV runs red -> yellow -> green -> cyan -> blue.  Reverse
+                 * that path so 0 is blue and 1 is red, without magenta. */
+                hsv((uint16_t)((1.0f - meter) * 43690.0f), &c);
+                pixel_level = on ? s_brightness : 0;
+            }
             uint16_t index = s_output[i].reverse ? s_output[i].pixels - 1 - p : p;
             led_strip_set_pixel(s_strip[i], index, scale(c.r, pixel_level), scale(c.g, pixel_level), scale(c.b, pixel_level));
         }
@@ -129,6 +142,15 @@ esp_err_t dc_lighting_set_progress(float progress)
     if (!s_lock) return ESP_ERR_INVALID_STATE;
     if (progress > 1.0f) progress = 1.0f;
     xSemaphoreTake(s_lock, portMAX_DELAY); s_progress = progress; xSemaphoreGive(s_lock);
+    return ESP_OK;
+}
+
+esp_err_t dc_lighting_set_audio_level(float level)
+{
+    if (!s_lock) return ESP_ERR_INVALID_STATE;
+    if (level < 0.0f) level = 0.0f;
+    if (level > 1.0f) level = 1.0f;
+    xSemaphoreTake(s_lock, portMAX_DELAY); s_audio_level = level; xSemaphoreGive(s_lock);
     return ESP_OK;
 }
 

@@ -20,6 +20,8 @@ typedef enum {
     DC_LIGHTING_FLOW,
     DC_LIGHTING_PROGRESS,
     DC_LIGHTING_CYLON,
+    /* A level meter: length and hue both follow the supplied audio level. */
+    DC_LIGHTING_AUDIO_METER,
 } dc_lighting_effect_t;
 
 typedef struct { uint8_t r, g, b; } dc_rgb_t;
@@ -41,4 +43,6 @@ esp_err_t dc_lighting_start(const dc_lighting_config_t *config);
 esp_err_t dc_lighting_set(dc_rgb_t color, dc_lighting_effect_t effect, uint8_t speed);
 // Progress is normalized to 0..1.  A negative value means unavailable.
 esp_err_t dc_lighting_set_progress(float progress);
+// Audio level is normalized to 0..1.  It is consumed by DC_LIGHTING_AUDIO_METER.
+esp_err_t dc_lighting_set_audio_level(float level);
 esp_err_t dc_lighting_off(void);
