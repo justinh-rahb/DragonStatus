@@ -52,10 +52,12 @@ overwrite them during an OTA migration.
 The OEM `app_rgb.c` initializer has now been decompiled. Its
 `rmt_tx_channel_config_t` stack initializer sets `gpio_num = 4`,
 `resolution_hz = 10,000,000`, `mem_block_symbols = 64`, and transmit queue
-depth 4. It subsequently sends a nine-byte GRB framebuffer, confirming a
-three-pixel WS2812 output on **GPIO4**. The `status` sdkconfig profile selects
-that recovered map; the normal development-C3 profile remains GPIO8 with its
-single on-board pixel.
+depth 4. The actual RGB transmit wrapper repeatedly sends a `0x4b`-byte GRB
+framebuffer while its effect routines iterate `0x19` pixels, confirming a
+**25-pixel WS2812 output on GPIO4**. The earlier nine-byte call in the
+initializer is unrelated indicator metadata, not the RGB framebuffer. The
+`status` sdkconfig profile selects the recovered map; the normal
+development-C3 profile remains GPIO8 with its single on-board pixel.
 
 The microphone/I2S pins are still under RE. The next pass follows the audio
 channel setup and extracts those configuration structs.
