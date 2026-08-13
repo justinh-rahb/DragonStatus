@@ -2,29 +2,34 @@ dependencies:
   dc_evlog:
     git: https://github.com/justinh-rahb/dragon-core.git
     path: components/dc_evlog
-    version: v0.14.0
+    version: 4f5a272540aa7a023c8792240c9c795a21f4fc57
   dc_source:
     git: https://github.com/justinh-rahb/dragon-core.git
     path: components/dc_source
-    version: v0.14.0
+    version: 4f5a272540aa7a023c8792240c9c795a21f4fc57
   dc_bambu:
     git: https://github.com/justinh-rahb/dragon-core.git
     path: components/dc_bambu
-    version: v0.14.0
+    version: 4f5a272540aa7a023c8792240c9c795a21f4fc57
   dc_wifi:
     git: https://github.com/justinh-rahb/dragon-core.git
     path: components/dc_wifi
-    version: v0.14.0
+    version: 4f5a272540aa7a023c8792240c9c795a21f4fc57
   dc_moonraker:
     git: https://github.com/justinh-rahb/dragon-core.git
     path: components/dc_moonraker
-    version: v0.14.0
+    version: 4f5a272540aa7a023c8792240c9c795a21f4fc57
   dc_ui:
     git: https://github.com/justinh-rahb/dragon-core.git
     path: components/dc_ui
-    version: v0.14.0
+    version: 4f5a272540aa7a023c8792240c9c795a21f4fc57
   dc_portal:
     git: https://github.com/justinh-rahb/dragon-core.git
     path: components/dc_portal
-    version: v0.14.0
+    version: 4f5a272540aa7a023c8792240c9c795a21f4fc57
+  dc_lighting:
+    git: https://github.com/justinh-rahb/dragon-core.git
+    path: components/dc_lighting
+    version: 4f5a272540aa7a023c8792240c9c795a21f4fc57
   espressif/led_strip: "^2.5.3"
+  espressif/es8311: "^1.0.0"
