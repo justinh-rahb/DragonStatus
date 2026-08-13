@@ -6,11 +6,13 @@ bool ds_board_lighting_outputs(dc_lighting_output_t outputs[DC_LIGHTING_MAX_OUTP
 
     /* The default target stays visibly testable on the development C3. */
 #if CONFIG_DS_BOARD_STATUS_PRODUCTION
-    /* OEM app_rgb.c initializes RMT TX with gpio_num=4 and repeatedly
-     * transmits a 0x4b-byte GRB framebuffer: 25 WS2812 pixels. */
+    /* Every known Status-family enclosure uses the GPIO4 WS2812 data chain,
+     * but Panda Status has 25 pixels and PopStatus has 27. WS2812 is a
+     * one-way stream: a shorter chain safely discards trailing pixel records.
+     * Emit the 27-pixel superset so one production image lights either bar. */
     outputs[0] = (dc_lighting_output_t){
         .gpio = GPIO_NUM_4,
-        .pixels = 25,
+        .pixels = 27,
         .reverse = false,
     };
 #else

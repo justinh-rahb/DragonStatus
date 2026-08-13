@@ -49,14 +49,17 @@ overwrite them during an OTA migration.
 
 ## Pinout status
 
-The OEM `app_rgb.c` initializer has now been decompiled. Its
+The OEM Panda Status `app_rgb.c` initializer has now been decompiled. Its
 `rmt_tx_channel_config_t` stack initializer sets `gpio_num = 4`,
 `resolution_hz = 10,000,000`, `mem_block_symbols = 64`, and transmit queue
 depth 4. The actual RGB transmit wrapper repeatedly sends a `0x4b`-byte GRB
 framebuffer while its effect routines iterate `0x19` pixels, confirming a
-**25-pixel WS2812 output on GPIO4**. The earlier nine-byte call in the
-initializer is unrelated indicator metadata, not the RGB framebuffer. The
-`status` sdkconfig profile selects the recovered map; the normal
+**25-pixel WS2812 output on GPIO4**. A later PopStatus capture identifies as
+`u1_status_2026_05_15` and has a 27-pixel physical bar. The common
+DragonStatus production profile therefore emits 27 GRB records on GPIO4:
+shorter one-way WS2812 chains discard the final two safely. The earlier
+nine-byte call in the initializer is unrelated indicator metadata, not the RGB
+framebuffer. The `status` sdkconfig profile selects the recovered map; the normal
 development-C3 profile remains GPIO8 with its single on-board pixel.
 
 The recovered map was verified on the live Panda Status unit through the stock

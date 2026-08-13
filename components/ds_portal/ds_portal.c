@@ -251,6 +251,7 @@ static esp_err_t state_get(httpd_req_t *req)
     uint8_t output_count = 0;
     cJSON_AddBoolToObject(lighting, "hardware_ready", ds_board_lighting_outputs(outputs, &output_count));
     cJSON_AddNumberToObject(lighting, "outputs", output_count);
+    if (output_count) cJSON_AddNumberToObject(lighting, "wire_pixels", outputs[0].pixels);
     return send_json(req, root);
 }
 
