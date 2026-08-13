@@ -12,9 +12,9 @@ the familiar factory status-light experience, then adds the Dragon family's
 printer integrations, configuration experience, and long-term maintainability.
 
 > **Early firmware:** the project compiles and preserves the factory flash
-> contract, but the board-specific RGB and microphone pins are still being
-> recovered from stock firmware. It intentionally does **not** drive LEDs on
-> hardware yet. Do not treat this repository as a ready-to-flash release.
+> contract. The development ESP32-C3 target can exercise its on-board WS2812;
+> the production Status RGB and microphone pins are still being recovered from
+> stock firmware. Do not treat this repository as a ready-to-flash release.
 
 ## Goals
 
@@ -40,10 +40,12 @@ The bootstrap firmware already includes:
 - a generic RMT/WS2812 renderer in `components/dc_lighting`;
 - DragonStatus printer-state-to-light-policy mapping in
   `components/ds_lighting`; and
-- a conservative board layer in `components/ds_board` that enables **zero**
-  outputs until GPIO recovery is confirmed.
+- a board layer in `components/ds_board` with an explicit development-C3
+  preview output; the production Status map remains gated on RE confirmation.
 
-The current policy implements the documented factory H2D intent:
+The current policy implements the documented factory H2D intent. Its OEM
+semantic palette is configurable as idle/paused, printing, and error; the
+unbound, preparing, and completion transitions retain their factory colours.
 
 | Printer state | Light behavior |
 | --- | --- |
@@ -128,10 +130,11 @@ Its active app identifies as `panda_status`, embeds ESP-IDF 5.3.1, the RMT
 LED-strip APIs, ESP-ADF/I2S audio paths, and a `my_board_v1_0` configuration
 path. It has been reconstructed into a segment-mapped ELF for Ghidra analysis.
 
-The remaining hardware work is precise: identify the application callers that
-construct the RMT and I2S channels, recover their configuration structs, and
-verify the results on hardware. Until then, driving an assumed GPIO would be
-unsafe and is explicitly blocked by the firmware.
+The remaining hardware work is precise: identify the production application
+callers that construct the RMT and I2S channels, recover their configuration
+structs, and verify the results on Status hardware. The only currently enabled
+output is the explicit development-C3 preview target; no production GPIO is
+asserted by this repository yet.
 
 See [OEM effects and RE notes](docs/OEM_EFFECTS_AND_RE.md) for the evidence
 log, factory behavior reference, and safe next steps.

@@ -6,7 +6,14 @@
 
 #define DS_LIGHT_NVS_NS "app_nvs"
 #define DS_LIGHT_NVS_KEY "ds_lighting"
-static ds_lighting_config_t s_config = { .enabled = true, .brightness = 128, .speed = 96 };
+static ds_lighting_config_t s_config = {
+    .enabled = true,
+    .brightness = 128,
+    .speed = 96,
+    .idle_color = {255, 255, 255},
+    .printing_color = {255, 255, 255},
+    .error_color = {255, 0, 0},
+};
 
 void ds_lighting_get_config(ds_lighting_config_t *out) { if (out) *out = s_config; }
 
@@ -41,18 +48,21 @@ esp_err_t ds_lighting_start(void)
 void ds_lighting_update(ds_printer_state_t state, float progress)
 {
     if (!s_config.enabled) { (void)dc_lighting_off(); return; }
-    dc_rgb_t color = {255, 255, 255}; dc_lighting_effect_t fx = DC_LIGHTING_SOLID;
+    dc_rgb_t idle = {s_config.idle_color[0], s_config.idle_color[1], s_config.idle_color[2]};
+    dc_rgb_t printing = {s_config.printing_color[0], s_config.printing_color[1], s_config.printing_color[2]};
+    dc_rgb_t error = {s_config.error_color[0], s_config.error_color[1], s_config.error_color[2]};
+    dc_rgb_t color = idle; dc_lighting_effect_t fx = DC_LIGHTING_SOLID;
     switch (state) {
     case DS_PRINTER_UNKNOWN:   color = (dc_rgb_t){0, 80, 255}; fx = DC_LIGHTING_FLOW; break;
     case DS_PRINTER_PREPARING: color = (dc_rgb_t){248, 163, 35}; fx = DC_LIGHTING_FLOW; break;
-    case DS_PRINTER_PRINTING:  color = (dc_rgb_t){255, 255, 255}; fx = progress >= 0.0f ? DC_LIGHTING_PROGRESS : DC_LIGHTING_SOLID; break;
-    case DS_PRINTER_PAUSED:    color = (dc_rgb_t){255, 255, 255}; fx = DC_LIGHTING_BREATHE; break;
+    case DS_PRINTER_PRINTING:  color = printing; fx = progress >= 0.0f ? DC_LIGHTING_PROGRESS : DC_LIGHTING_SOLID; break;
+    case DS_PRINTER_PAUSED:    color = idle; fx = DC_LIGHTING_BREATHE; break;
     case DS_PRINTER_COMPLETE:  color = (dc_rgb_t){0, 255, 42}; break;
-    case DS_PRINTER_ERROR:     color = (dc_rgb_t){255, 0, 0}; fx = DC_LIGHTING_BLINK; break;
-    case DS_PRINTER_IDLE:      color = (dc_rgb_t){255, 255, 255}; fx = DC_LIGHTING_BREATHE; break;
+    case DS_PRINTER_ERROR:     color = error; fx = DC_LIGHTING_BLINK; break;
+    case DS_PRINTER_IDLE:      color = idle; fx = DC_LIGHTING_BREATHE; break;
     default: break;
     }
     (void)dc_lighting_set_progress(progress);
-    if (s_config.effect) fx = (dc_lighting_effect_t)s_config.effect;
+    if (s_config.effect) { color = printing; fx = (dc_lighting_effect_t)s_config.effect; }
     (void)dc_lighting_set(color, fx, s_config.speed);
 }

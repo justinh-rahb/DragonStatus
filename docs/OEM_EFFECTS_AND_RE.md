@@ -13,6 +13,21 @@ The 1.0.1 release notes extend the completion hold to 15 minutes and add a
 120-minute non-Music idle standby. DragonStatus will retain the behavior as
 configurable policy rather than hard-code it into the renderer.
 
+## Live OEM portal contract
+
+The stock 1.0.1 Panda Status portal is a self-contained page backed by a
+WebSocket at `/ws`. A connection without sending any commands provides the
+current Wi-Fi, printer, and settings snapshot. Lighting settings are reported
+in `settings.list2`: slot zero is Music and slot one is H2D. The H2D slot
+contains an ordered `rgb_rgba` palette of **idle, printing, error**, plus a
+per-slot brightness value. This confirms that these three colours are OEM
+semantic settings rather than DragonStatus inventions.
+
+The portal's normal firmware uploader POSTs raw application data to `/ota`
+with `Content-Type: application/octet-stream` and an `OTA-Type: ota_fw`
+header. That is useful evidence for a future stock-compatible network update
+path; DragonStatus retains its existing Core OTA mechanism today.
+
 ## Stock app evidence
 
 `backups/stock-vent-20260731-002251.bin` is a 4 MiB ESP32-C3 flash image. It
@@ -34,7 +49,7 @@ overwrite them during an OTA migration.
 
 ## Pinout status
 
-RGB data and microphone pins are deliberately **not yet asserted**. The next
-RE pass identifies the application callers of the RMT and I2S channel setup,
-then extracts their GPIO config structs. No guessed GPIO is acceptable because
-it could drive a strapping or unrelated board line.
+Production RGB data and microphone pins are deliberately **not yet asserted**.
+The development C3 preview output is explicitly GPIO8 and is not a claim about
+the Status board. The next RE pass identifies the application callers of the
+RMT and I2S channel setup, then extracts their GPIO config structs.

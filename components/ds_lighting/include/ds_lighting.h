@@ -14,7 +14,14 @@ typedef struct {
     bool enabled;
     uint8_t brightness;
     uint8_t speed;
-    uint8_t effect; /* 0 = factory state effect; otherwise dc_lighting_effect_t */
+    /* 0 retains the OEM H2D state policy; any other value applies one
+     * dc_lighting_effect_t to every state using printing_color. */
+    uint8_t effect;
+    /* OEM H2D exposes three semantic palette entries.  The documented
+     * unbound/preparing/completed colours remain factory-owned. */
+    uint8_t idle_color[3];
+    uint8_t printing_color[3];
+    uint8_t error_color[3];
 } ds_lighting_config_t;
 
 esp_err_t ds_lighting_start(void);

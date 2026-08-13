@@ -44,6 +44,12 @@ static cJSON *lighting_json(void)
     cJSON_AddNumberToObject(root, "speed", config.speed);
     cJSON_AddNumberToObject(root, "effect", config.effect);
     cJSON_AddStringToObject(root, "profile", "factory_h2d");
+    const uint8_t *colors[] = {config.idle_color, config.printing_color, config.error_color};
+    const char *names[] = {"idle", "printing", "error"};
+    for (size_t i = 0; i < sizeof(colors) / sizeof(colors[0]); ++i) {
+        cJSON *color = cJSON_AddArrayToObject(root, names[i]);
+        for (size_t channel = 0; channel < 3; ++channel) cJSON_AddItemToArray(color, cJSON_CreateNumber(colors[i][channel]));
+    }
     return root;
 }
 
@@ -57,6 +63,22 @@ static esp_err_t lighting_post(httpd_req_t *req)
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "brightness")) && cJSON_IsNumber(value)) config.brightness = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > 255 ? 255 : value->valueint);
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "speed")) && cJSON_IsNumber(value)) config.speed = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > 255 ? 255 : value->valueint);
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "effect")) && cJSON_IsNumber(value)) config.effect = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > DC_LIGHTING_PROGRESS ? DC_LIGHTING_PROGRESS : value->valueint);
+    uint8_t *colors[] = {config.idle_color, config.printing_color, config.error_color};
+    const char *names[] = {"idle", "printing", "error"};
+    for (size_t i = 0; i < sizeof(colors) / sizeof(colors[0]); ++i) {
+        cJSON *color = cJSON_GetObjectItemCaseSensitive(body, names[i]);
+        if (!color) continue;
+        if (!cJSON_IsArray(color) || cJSON_GetArraySize(color) != 3) {
+            cJSON_Delete(body); return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "invalid RGB colour");
+        }
+        for (size_t channel = 0; channel < 3; ++channel) {
+            cJSON *component = cJSON_GetArrayItem(color, channel);
+            if (!cJSON_IsNumber(component) || component->valueint < 0 || component->valueint > 255) {
+                cJSON_Delete(body); return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "invalid RGB colour");
+            }
+            colors[i][channel] = (uint8_t)component->valueint;
+        }
+    }
     cJSON_Delete(body); if (ds_lighting_set_config(&config) != ESP_OK) return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "could not save lighting");
     return send_json(req, lighting_json());
 }
