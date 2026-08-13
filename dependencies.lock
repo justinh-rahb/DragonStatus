@@ -73,6 +73,16 @@ dependencies:
       path: components/dc_wifi
       type: git
     version: 516c27aca017d006cbb8498ee63178c3a15d8ebe
+  espressif/es8311:
+    component_hash: 46b3117250344bb03f143d5e2becf81cfb111679fbd7b95cefc2d302d36cc393
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.4,<6.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.0.0~1
   espressif/esp_websocket_client:
     component_hash: dc00233af846f3a744ada283a300e0d586040aadc3ee67361645ecdce4523672
     dependencies:
@@ -115,7 +125,9 @@ direct_dependencies:
 - dc_source
 - dc_ui
 - dc_wifi
+- espressif/es8311
 - espressif/led_strip
-manifest_hash: 5b67065041b12dd57a2ecb15dd551db2e2bb06eed80f3fa0f9f745e5e4835775
+- idf
+manifest_hash: 312335cbbfb544bd875ac3edf91590f177a02f6825f88df2308baf1dc78845dc
 target: esp32c3
 version: 2.0.0

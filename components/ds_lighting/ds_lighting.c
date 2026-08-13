@@ -71,3 +71,8 @@ void ds_lighting_update(ds_printer_state_t state, float progress)
     }
     (void)dc_lighting_set(color, fx, s_config.speed);
 }
+
+void ds_lighting_set_audio_level(float level)
+{
+    (void)dc_lighting_set_audio_level(level);
+}

@@ -4,6 +4,7 @@
 #include "dc_source.h"
 #include "dc_wifi.h"
 #include "ds_lighting.h"
+#include "ds_audio.h"
 #include "ds_portal.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -63,6 +64,7 @@ void app_main(void)
     default: break;
     }
     ESP_ERROR_CHECK(ds_lighting_start());
+    ESP_ERROR_CHECK(ds_audio_start());
     ESP_ERROR_CHECK(ds_portal_start());
     for (;;) { update_lighting(); vTaskDelay(pdMS_TO_TICKS(500)); }
 }

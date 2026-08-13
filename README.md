@@ -11,10 +11,10 @@ their enclosures and possible LED-strip-length differences. DragonStatus keeps
 the familiar factory status-light experience, then adds the Dragon family's
 printer integrations, configuration experience, and long-term maintainability.
 
-> **Early firmware:** the project compiles and preserves the factory flash
-> contract. The development ESP32-C3 target can exercise its on-board WS2812;
-> the production Status RGB and microphone pins are still being recovered from
-> stock firmware. Do not treat this repository as a ready-to-flash release.
+> **Early firmware:** the project preserves the factory flash contract. The
+> production RGB output and ES8311 microphone path have been recovered and
+> validated on Panda Status hardware; keep a private stock backup before
+> installing experimental builds.
 
 ## Goals
 
@@ -40,8 +40,10 @@ The bootstrap firmware already includes:
 - a generic RMT/WS2812 renderer in `components/dc_lighting`;
 - DragonStatus printer-state-to-light-policy mapping in
   `components/ds_lighting`; and
+- a Status ES8311/I2S audio adapter in `components/ds_audio`, which supplies a
+  normalized microphone level to the reusable Core audio-meter renderer; and
 - a board layer in `components/ds_board` with an explicit development-C3
-  preview output; the production Status map remains gated on RE confirmation.
+  preview output plus the verified production Status RGB map.
 
 The current policy implements the documented factory H2D intent. Its OEM
 semantic palette is configurable as idle/paused, printing, and error; the
@@ -63,16 +65,16 @@ recorded in [OEM effects and RE notes](docs/OEM_EFFECTS_AND_RE.md).
 ## Architecture
 
 ```text
-printer source (Bambu MQTT or Moonraker)
+printer source (Bambu MQTT or Moonraker)     Status ES8311 microphone
+                 |                                      |
+                 v                                      v
+       dragon-core source selection                  ds_audio adapter
+                 |                                      |
+                 v                                      |
+      ds_lighting state/palette policy <---------------+
                  |
                  v
-       dragon-core source selection
-                 |
-                 v
-      ds_lighting state/palette policy
-                 |
-                 v
-      dc_lighting generic WS2812 engine
+      dc_lighting generic WS2812/audio-meter engine
                  |
                  v
      ds_board verified board GPIO mapping
@@ -162,16 +164,16 @@ Its active app identifies as `panda_status`, embeds ESP-IDF 5.3.1, the RMT
 LED-strip APIs, ESP-ADF/I2S audio paths, and a `my_board_v1_0` configuration
 path. It has been reconstructed into a segment-mapped ELF for Ghidra analysis.
 
-The remaining hardware work is precise: identify the production application
-callers that construct the RMT and I2S channels, recover their configuration
-structs, and verify the results on Status hardware. The RGB RMT configuration
-is GPIO4 with a GRB/WS2812 chain. Panda Status uses 25 pixels; the newly
+The recovered production map has been validated on Status hardware. The RGB
+RMT configuration is GPIO4 with a GRB/WS2812 chain. Panda Status uses 25 pixels; the newly
 captured PopStatus has 27. The production renderer emits the safe 27-pixel
 superset—WS2812 chains have no feedback path and a 25-pixel bar simply ignores
 the last two records. Normal builds continue to target the development C3's
 GPIO8 preview LED; a production image is explicitly selected with
 `bash tools/idf-build.sh . esp32c3 build-status status`. The microphone/I2S
-configuration remains under RE.
+path is the OEM ES8311 at I2C SDA=GPIO2/SCL=GPIO3 and the recovered legacy I2S
+map MCLK=GPIO0, BCLK=GPIO1, WS=GPIO4, DOUT=GPIO7, DIN=GPIO10. It captures a
+16 kHz stereo stream and sends its filtered 0..1 level to Core.
 
 See [OEM effects and RE notes](docs/OEM_EFFECTS_AND_RE.md) for the evidence
 log, factory behavior reference, and safe next steps.

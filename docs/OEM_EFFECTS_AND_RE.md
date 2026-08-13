@@ -68,5 +68,22 @@ covered the entire physical bar uniformly; the profile was then restored to
 the factory H2D palette. The stock portal's H2D slot reports 25% brightness,
 which is DragonStatus's fresh-install default (64/255).
 
-The microphone/I2S pins are still under RE. The next pass follows the audio
-channel setup and extracts those configuration structs.
+## Confirmed microphone path
+
+The stock `board_pins_config.c` helpers and ESP-IDF's legacy
+`i2s_pin_config_t` ordering recover the complete audio map:
+
+| Function | GPIO |
+|---|---:|
+| ES8311 I2C SDA / SCL | 2 / 3 |
+| I2S MCLK / BCLK / WS | 0 / 1 / 4 |
+| I2S DOUT / DIN | 7 / 10 |
+
+DragonStatus initializes the ES8311 as an analog microphone codec and opens a
+16 kHz full-duplex I2S channel. Opening TX and RX together is important: the
+TX side supplies the shared master clocks even though Music mode only consumes
+RX. The map was verified on the live Panda Status unit: I2C codec init passed,
+I2S reads returned 1024-byte PCM frames, and the captured room audio drove the
+Dragon Core audio meter. The renderer remains generic in `dc_lighting`; this
+codec/pin layer is deliberately product-specific pending a Core capture-source
+interface suitable for other Panda products.

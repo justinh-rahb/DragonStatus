@@ -7,6 +7,7 @@
 #include "dc_source.h"
 #include "dc_wifi.h"
 #include "ds_board.h"
+#include "ds_audio.h"
 #include "ds_lighting.h"
 #include "esp_app_desc.h"
 #include "esp_check.h"
@@ -37,12 +38,21 @@ static cJSON *recv_json(httpd_req_t *req)
 static cJSON *lighting_json(void)
 {
     ds_lighting_config_t config; ds_lighting_get_config(&config);
+    ds_audio_status_t audio = {0}; ds_audio_get_status(&audio);
     cJSON *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "api_version", 2);
     cJSON_AddBoolToObject(root, "enabled", config.enabled);
     cJSON_AddNumberToObject(root, "brightness", config.brightness);
     cJSON_AddNumberToObject(root, "speed", config.speed);
     cJSON_AddNumberToObject(root, "effect", config.effect);
+    cJSON_AddNumberToObject(root, "audio_level", ds_audio_get_level());
+    cJSON *audio_json = cJSON_AddObjectToObject(root, "audio");
+    cJSON_AddBoolToObject(audio_json, "codec_ready", audio.codec_ready);
+    cJSON_AddNumberToObject(audio_json, "codec_error", audio.codec_error);
+    cJSON_AddNumberToObject(audio_json, "capture_error", audio.capture_error);
+    cJSON_AddNumberToObject(audio_json, "capture_stage", audio.capture_stage);
+    cJSON_AddNumberToObject(audio_json, "capture_bytes", audio.capture_bytes);
+    cJSON_AddNumberToObject(audio_json, "raw_level", audio.raw_level);
     cJSON_AddStringToObject(root, "profile", "factory_h2d");
     const uint8_t *colors[] = {config.idle_color, config.printing_color, config.error_color};
     const char *names[] = {"idle", "printing", "error"};

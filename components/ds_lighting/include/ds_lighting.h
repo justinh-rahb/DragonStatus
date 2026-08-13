@@ -26,5 +26,7 @@ typedef struct {
 
 esp_err_t ds_lighting_start(void);
 void ds_lighting_update(ds_printer_state_t state, float progress);
+/* Board audio adapter supplies its filtered 0..1 level here. */
+void ds_lighting_set_audio_level(float level);
 void ds_lighting_get_config(ds_lighting_config_t *out);
 esp_err_t ds_lighting_set_config(const ds_lighting_config_t *config);
