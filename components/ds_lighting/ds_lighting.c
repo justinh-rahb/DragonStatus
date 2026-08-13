@@ -39,6 +39,13 @@ esp_err_t ds_lighting_start(void)
     if (nvs_open(DS_LIGHT_NVS_NS, NVS_READONLY, &nvs) == ESP_OK) {
         (void)nvs_get_blob(nvs, DS_LIGHT_NVS_KEY, &s_config, &size); nvs_close(nvs);
     }
+    /* v0.1.0 displayed value 5 as Flow although the renderer reserved it for
+     * progress. Preserve the operator's intent before adopting Core's richer
+     * effect set; Cylon remains its stable value 6. The temporary local
+     * renderer used 7 for Music; Core assigns that slot to Cycle and keeps
+     * Music at 10, so migrate persisted Status settings on first boot. */
+    if (s_config.effect == DC_LIGHTING_PROGRESS) s_config.effect = DC_LIGHTING_FLOW;
+    if (s_config.effect == DC_LIGHTING_CYCLE) s_config.effect = DC_LIGHTING_AUDIO_METER;
     dc_lighting_output_t outputs[DC_LIGHTING_MAX_OUTPUTS]; uint8_t count = 0;
     if (!ds_board_lighting_outputs(outputs, &count)) {
         ESP_LOGW(TAG, "RGB output disabled until board pinout is verified");

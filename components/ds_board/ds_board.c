@@ -14,12 +14,14 @@ bool ds_board_lighting_outputs(dc_lighting_output_t outputs[DC_LIGHTING_MAX_OUTP
         .gpio = GPIO_NUM_4,
         .pixels = 27,
         .reverse = false,
+        .transport = DC_LIGHTING_TRANSPORT_RMT,
     };
 #else
     outputs[0] = (dc_lighting_output_t){
         .gpio = GPIO_NUM_8,
         .pixels = 1,
         .reverse = false,
+        .transport = DC_LIGHTING_TRANSPORT_RMT,
     };
 #endif
     *count = 1;
