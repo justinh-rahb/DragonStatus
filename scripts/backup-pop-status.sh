@@ -54,21 +54,50 @@ if [[ ! -e $PORT ]]; then
     exit 2
 fi
 
+setup_esptool() {
+    if ! command -v python3 >/dev/null 2>&1; then
+        cat >&2 <<'EOF'
+Python 3 is required to read the ESP32-C3. On Raspberry Pi OS/Debian, run:
+  sudo apt update && sudo apt install -y python3 python3-venv python3-pip
+Then run this backup script again.
+EOF
+        exit 2
+    fi
+
+    # Keep the download outside the backup directory, so the output directory
+    # contains only the images Thomas may want to retain or share.
+    local cache_root=${XDG_CACHE_HOME:-"$HOME/.cache"}/dragonstatus-backup
+    local tool_venv=${DRAGONSTATUS_BACKUP_VENV:-"$cache_root/venv"}
+
+    if [[ ! -x "$tool_venv/bin/python" ]]; then
+        printf 'Creating a small local Python environment for esptool...\n'
+        if ! python3 -m venv "$tool_venv"; then
+            cat >&2 <<'EOF'
+Python's venv module is required. On Raspberry Pi OS/Debian, run:
+  sudo apt update && sudo apt install -y python3-venv python3-pip
+Then run this backup script again.
+EOF
+            exit 2
+        fi
+    fi
+
+    if ! "$tool_venv/bin/python" -c 'import esptool, serial' >/dev/null 2>&1; then
+        printf 'Installing esptool and pyserial in %s...\n' "$tool_venv"
+        "$tool_venv/bin/python" -m pip install --upgrade esptool pyserial
+    fi
+
+    ESPTOOL=("$tool_venv/bin/python" -m esptool)
+}
+
 if command -v esptool >/dev/null 2>&1; then
     ESPTOOL=(esptool)
 elif command -v esptool.py >/dev/null 2>&1; then
     ESPTOOL=(esptool.py)
-elif python3 -c 'import esptool' >/dev/null 2>&1; then
+elif command -v python3 >/dev/null 2>&1 && \
+    python3 -c 'import esptool, serial' >/dev/null 2>&1; then
     ESPTOOL=(python3 -m esptool)
 else
-    cat >&2 <<'EOF'
-esptool is required. On Debian/Raspberry Pi OS, install it with:
-  sudo apt install python3-esptool
-
-Alternatively, use a non-system Python environment:
-  python3 -m pip install --user esptool
-EOF
-    exit 2
+    setup_esptool
 fi
 
 mkdir -p "$OUT_DIR"

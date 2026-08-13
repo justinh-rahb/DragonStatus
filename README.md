@@ -118,12 +118,20 @@ second `-nvs-redacted.bin` copy for sharing with us. The redacted copy has the
 whole NVS partition cleared, removing Wi-Fi/Bambu credentials and any other
 stored NVS values. Never send the private full image.
 
-On Raspberry Pi OS/Debian, first install the reader with
-`sudo apt install python3-esptool`. If Linux reports serial-port permission
-errors, add the current user to `dialout` (`sudo usermod -aG dialout "$USER"`)
-and sign out and back in. The script does not write, erase, or reset flash on
-the device. The NVS-redacted copy is intentionally not an exact restore image:
-keep the private full backup somewhere safe.
+The script finds an existing `esptool` installation or creates an isolated
+tool environment under `~/.cache` and installs both `esptool` and `pyserial`.
+On a minimal Raspberry Pi OS/Debian install, it will tell the user to install
+the one prerequisite first:
+
+```sh
+sudo apt update && sudo apt install -y python3 python3-venv python3-pip git
+```
+
+If Linux reports serial-port permission errors, add the current user to
+`dialout` (`sudo usermod -aG dialout "$USER"`) and sign out and back in. The
+script does not write, erase, or reset flash on the device. The NVS-redacted
+copy is intentionally not an exact restore image: keep the private full backup
+somewhere safe.
 
 ## Building
 
