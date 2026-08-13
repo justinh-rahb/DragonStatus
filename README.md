@@ -37,7 +37,8 @@ The bootstrap firmware already includes:
 - factory-compatible 4 MiB partition layout with two OTA application slots;
 - Dragon Core Wi-Fi setup, captive AP fallback, stock-NVS migration, event log,
   Bambu LAN/MQTT, Moonraker, source selection, OTA, and browser portal;
-- a generic RMT/WS2812 renderer in `components/dc_lighting`;
+- the generic RMT/WS2812 renderer from Dragon Core's `dc_lighting`
+  component (currently pinned to Core `v0.16.2`);
 - DragonStatus printer-state-to-light-policy mapping in
   `components/ds_lighting`; and
 - a Status ES8311/I2S audio adapter in `components/ds_audio`, which supplies a
@@ -59,8 +60,10 @@ unbound, preparing, and completion transitions retain their factory colours.
 | Error | Red blink |
 
 Music mode remains a distinct audio-reactive policy: blue through red as sound
-level rises. The factory behavior and the evidence behind this mapping are
-recorded in [OEM effects and RE notes](docs/OEM_EFFECTS_AND_RE.md).
+level rises. In the shared renderer it is the canonical **Music meter** effect
+(`10`); Status automatically migrates the temporary pre-Core local value (`7`)
+from existing NVS settings. The factory behavior and the evidence behind this
+mapping are recorded in [OEM effects and RE notes](docs/OEM_EFFECTS_AND_RE.md).
 
 ## Architecture
 
@@ -74,16 +77,18 @@ printer source (Bambu MQTT or Moonraker)     Status ES8311 microphone
       ds_lighting state/palette policy <---------------+
                  |
                  v
-      dc_lighting generic WS2812/audio-meter engine
+   dragon-core dc_lighting WS2812/audio-meter engine
                  |
                  v
      ds_board verified board GPIO mapping
 ```
 
-`dc_*` components are deliberately generic. `ds_*` components are
-DragonStatus-specific and are the only appropriate home for product policy,
-board mapping, and future Status-only UI behavior. This keeps the lighting
-engine transferable to DragonVent and other Dragon projects.
+`dc_*` components are deliberately generic and are consumed from
+[`dragon-core`](https://github.com/justinh-rahb/dragon-core). `ds_*`
+components are DragonStatus-specific and are the only appropriate home for
+product policy, board mapping, microphone wiring, and future Status-only UI
+behavior. This keeps the lighting engine transferable to DragonVent and other
+Dragon projects while allowing their strip layouts to differ.
 
 ## Factory compatibility and safety
 
@@ -149,8 +154,8 @@ tools/idf-build.sh . esp32c3 build
 ```
 
 The resulting application image is `build/dragonstatus.bin`. The build is
-checked against the stock-sized `0x1f0000` application slots. The current
-firmware uses approximately 53% of one slot.
+checked against the stock-sized `0x1f0000` application slots. The shared-
+topology firmware uses approximately 56% of one slot.
 
 The generated ESP-IDF flash command includes bootloader and partition artifacts
 for development convenience. It is **not** the normal stock-device installation

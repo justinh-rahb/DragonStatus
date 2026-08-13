@@ -84,6 +84,10 @@ DragonStatus initializes the ES8311 as an analog microphone codec and opens a
 TX side supplies the shared master clocks even though Music mode only consumes
 RX. The map was verified on the live Panda Status unit: I2C codec init passed,
 I2S reads returned 1024-byte PCM frames, and the captured room audio drove the
-Dragon Core audio meter. The renderer remains generic in `dc_lighting`; this
-codec/pin layer is deliberately product-specific pending a Core capture-source
-interface suitable for other Panda products.
+Dragon Core audio meter. The production renderer is Dragon Core's shared
+`dc_lighting` component; Status contributes only the 25/27-pixel board topology
+and microphone bridge. Its canonical Music meter effect is `10`. Earlier
+experimental Status builds used local value `7`; firmware migrates that saved
+setting to the shared value on boot. The codec/pin layer remains deliberately
+product-specific pending a Core capture-source interface suitable for other
+Panda products.
