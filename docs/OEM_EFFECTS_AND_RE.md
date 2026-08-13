@@ -49,7 +49,13 @@ overwrite them during an OTA migration.
 
 ## Pinout status
 
-Production RGB data and microphone pins are deliberately **not yet asserted**.
-The development C3 preview output is explicitly GPIO8 and is not a claim about
-the Status board. The next RE pass identifies the application callers of the
-RMT and I2S channel setup, then extracts their GPIO config structs.
+The OEM `app_rgb.c` initializer has now been decompiled. Its
+`rmt_tx_channel_config_t` stack initializer sets `gpio_num = 4`,
+`resolution_hz = 10,000,000`, `mem_block_symbols = 64`, and transmit queue
+depth 4. It subsequently sends a nine-byte GRB framebuffer, confirming a
+three-pixel WS2812 output on **GPIO4**. The `status` sdkconfig profile selects
+that recovered map; the normal development-C3 profile remains GPIO8 with its
+single on-board pixel.
+
+The microphone/I2S pins are still under RE. The next pass follows the audio
+channel setup and extracts those configuration structs.

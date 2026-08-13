@@ -1,0 +1,12 @@
+menu "DragonStatus hardware"
+
+config DS_BOARD_STATUS_PRODUCTION
+    bool "Panda Status production RGB output"
+    default n
+    help
+        Select this only for the Panda Status/Panda Lux RGB PX/PopStatus board.
+        The OEM RGB initializer configures an RMT TX channel on GPIO4 and
+        transmits three GRB pixels.  The normal development-C3 build instead
+        uses its on-board WS2812 on GPIO8.
+
+endmenu

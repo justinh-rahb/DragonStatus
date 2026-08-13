@@ -132,9 +132,11 @@ path. It has been reconstructed into a segment-mapped ELF for Ghidra analysis.
 
 The remaining hardware work is precise: identify the production application
 callers that construct the RMT and I2S channels, recover their configuration
-structs, and verify the results on Status hardware. The only currently enabled
-output is the explicit development-C3 preview target; no production GPIO is
-asserted by this repository yet.
+structs, and verify the results on Status hardware. The RGB RMT configuration
+has now been recovered as GPIO4 with three GRB/WS2812 pixels. Normal builds
+continue to target the development C3's GPIO8 preview LED; a production image
+is explicitly selected with `bash tools/idf-build.sh . esp32c3 build-status status`.
+The microphone/I2S configuration remains under RE.
 
 See [OEM effects and RE notes](docs/OEM_EFFECTS_AND_RE.md) for the evidence
 log, factory behavior reference, and safe next steps.
