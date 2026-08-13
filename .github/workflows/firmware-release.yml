@@ -32,7 +32,7 @@ jobs:
           esp_idf_version: v5.3.1
           target: esp32c3
           path: .
-          command: tools/idf-build.sh . esp32c3 build-status status
+          command: bash tools/idf-build.sh . esp32c3 build-status status
 
       - name: Stage OTA artifact
         env:
