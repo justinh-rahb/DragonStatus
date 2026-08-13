@@ -8,7 +8,9 @@
 #define DS_LIGHT_NVS_KEY "ds_lighting"
 static ds_lighting_config_t s_config = {
     .enabled = true,
-    .brightness = 128,
+    /* OEM H2D slot reports 25%; retain the original appearance for a fresh
+     * DragonStatus install while allowing the user to tune it later. */
+    .brightness = 64,
     .speed = 96,
     .idle_color = {255, 255, 255},
     .printing_color = {255, 255, 255},

@@ -59,5 +59,11 @@ initializer is unrelated indicator metadata, not the RGB framebuffer. The
 `status` sdkconfig profile selects the recovered map; the normal
 development-C3 profile remains GPIO8 with its single on-board pixel.
 
+The recovered map was verified on the live Panda Status unit through the stock
+OTA handoff and DragonStatus's subsequent Core OTA path. A solid-red test frame
+covered the entire physical bar uniformly; the profile was then restored to
+the factory H2D palette. The stock portal's H2D slot reports 25% brightness,
+which is DragonStatus's fresh-install default (64/255).
+
 The microphone/I2S pins are still under RE. The next pass follows the audio
 channel setup and extracts those configuration structs.
