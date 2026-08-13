@@ -18,6 +18,14 @@ static SemaphoreHandle_t s_lock;
 
 static uint8_t scale(uint8_t value, uint8_t level) { return (uint16_t)value * level / 255; }
 
+/* Speed is a rate selector, not a phase multiplier.  Multiplying the frame
+ * counter by an arbitrary byte makes a breathe wave jump around its cycle (at
+ * the OEM H2D default of 96 it looked like a rapid flash). */
+static uint32_t animation_phase(uint32_t tick)
+{
+    return tick * (1 + s_speed / 32);
+}
+
 static void hsv(uint16_t hue, dc_rgb_t *out)
 {
     uint8_t region = hue / 10923;
@@ -38,19 +46,20 @@ static void frame(uint32_t tick)
 {
     dc_rgb_t base = s_color;
     uint8_t level = s_brightness;
+    uint32_t phase = animation_phase(tick);
     if (s_effect == DC_LIGHTING_BREATHE) {
-        uint16_t phase = (tick * (uint32_t)(s_speed + 1)) & 511;
-        uint8_t wave = phase < 256 ? phase : 511 - phase;
+        uint16_t wave_phase = phase & 511;
+        uint8_t wave = wave_phase < 256 ? wave_phase : 511 - wave_phase;
         level = scale(level, 40 + (uint16_t)wave * 215 / 255);
-    } else if (s_effect == DC_LIGHTING_BLINK && ((tick * (uint32_t)(s_speed + 1) / 10) & 1)) {
+    } else if (s_effect == DC_LIGHTING_BLINK && ((phase / 64) & 1)) {
         level = 0;
     }
     for (uint8_t i = 0; i < s_count; ++i) {
         for (uint16_t p = 0; p < s_output[i].pixels; ++p) {
             dc_rgb_t c = base;
-            if (s_effect == DC_LIGHTING_RAINBOW) hsv((uint16_t)(tick * (s_speed + 1) * 32 + p * (65536 / s_output[i].pixels)), &c);
+            if (s_effect == DC_LIGHTING_RAINBOW) hsv((uint16_t)(phase * 128 + p * (65536 / s_output[i].pixels)), &c);
             if (s_effect == DC_LIGHTING_FLOW) {
-                uint16_t head = (tick * (uint32_t)(s_speed + 1) / 12) % s_output[i].pixels;
+                uint16_t head = (phase / 6) % s_output[i].pixels;
                 uint16_t distance = (p + s_output[i].pixels - head) % s_output[i].pixels;
                 uint8_t tail = distance < 6 ? (uint8_t)((6 - distance) * 255 / 6) : 0;
                 c = base;
