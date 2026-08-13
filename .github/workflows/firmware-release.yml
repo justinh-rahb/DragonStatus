@@ -1,0 +1,83 @@
+name: Firmware Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create or update, for example v0.2.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: firmware-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish Status OTA firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+
+      - name: Build production firmware
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.3.1
+          target: esp32c3
+          path: .
+          command: tools/idf-build.sh . esp32c3 build-status status
+
+      - name: Stage OTA artifact
+        env:
+          RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          ota="dragonstatus-${RELEASE_TAG}-ota.bin"
+          cp build-status/dragonstatus.bin "dist/${ota}"
+          (
+            cd dist
+            sha256sum "${ota}" > SHA256SUMS.txt
+          )
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          cat > release_notes.md <<EOF
+          ## DragonStatus ${RELEASE_TAG}
+
+          DragonStatus preserves the stock ESP32-C3 bootloader, partition table,
+          NVS, and dual-OTA layout. This release uses the shared Dragon Core
+          topology-aware WS2812 renderer and supports both 25-pixel Panda Status
+          and 27-pixel PopStatus bars.
+
+          ### Install or update over Wi-Fi
+
+          1. Keep a private stock backup before your first install.
+          2. On stock Panda Status, use its firmware-update page to upload
+             `dragonstatus-${RELEASE_TAG}-ota.bin`.
+          3. On DragonStatus, open **Device setup → Maintenance** and upload the
+             same OTA file. Only the inactive application slot is replaced.
+
+          The stock bootloader, partition table, and NVS are not overwritten.
+          Verify the download with `shasum -a 256 -c SHA256SUMS.txt`.
+          EOF
+
+          flags=(--title "DragonStatus ${RELEASE_TAG}" --notes-file release_notes.md)
+          case "$RELEASE_TAG" in *-*) flags+=(--prerelease);; esac
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/* --clobber
+            gh release edit "$RELEASE_TAG" "${flags[@]}"
+          else
+            gh release create "$RELEASE_TAG" "${flags[@]}" dist/*
+          fi
