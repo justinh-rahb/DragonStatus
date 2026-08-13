@@ -9,7 +9,11 @@
 #include "ds_board.h"
 #include "ds_lighting.h"
 #include "esp_app_desc.h"
+#include "esp_check.h"
 #include "esp_http_server.h"
+
+#include <stdlib.h>
+#include <string.h>
 
 static esp_err_t send_json(httpd_req_t *req, cJSON *root)
 {
@@ -55,6 +59,117 @@ static esp_err_t lighting_post(httpd_req_t *req)
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "effect")) && cJSON_IsNumber(value)) config.effect = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > DC_LIGHTING_PROGRESS ? DC_LIGHTING_PROGRESS : value->valueint);
     cJSON_Delete(body); if (ds_lighting_set_config(&config) != ESP_OK) return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "could not save lighting");
     return send_json(req, lighting_json());
+}
+
+static cJSON *setup_field(cJSON *fields, const char *key, const char *label,
+                          const char *type, const char *value)
+{
+    cJSON *field = cJSON_CreateObject();
+    cJSON_AddStringToObject(field, "key", key);
+    cJSON_AddStringToObject(field, "label", label);
+    cJSON_AddStringToObject(field, "type", type);
+    cJSON_AddStringToObject(field, "value", value ?: "");
+    cJSON_AddItemToArray(fields, field);
+    return field;
+}
+
+static void visible_when(cJSON *section, const char *key, const char *value)
+{
+    cJSON *when = cJSON_AddObjectToObject(section, "visible_when");
+    cJSON_AddStringToObject(when, "field", key);
+    cJSON_AddStringToObject(when, "value", value);
+}
+
+static const char *source_value(dc_ctl_source_t source)
+{
+    switch (source) {
+    case DC_SRC_BAMBU: return "bambu";
+    case DC_SRC_KLIPPER: return "klipper";
+    default: return "none";
+    }
+}
+
+static cJSON *describe_product(void *ctx)
+{
+    (void)ctx;
+    cJSON *root = cJSON_CreateObject();
+    cJSON *sections = cJSON_AddArrayToObject(root, "sections");
+    cJSON *printer = cJSON_CreateObject();
+    cJSON_AddStringToObject(printer, "title", "Printer source");
+    cJSON_AddStringToObject(printer, "description", "Choose one printer. A restart applies a source change.");
+    cJSON *fields = cJSON_AddArrayToObject(printer, "fields");
+    cJSON *source = setup_field(fields, "source", "Printer type", "select", source_value(dc_source_get()));
+    cJSON *options = cJSON_AddArrayToObject(source, "options");
+    const char *choices[][2] = {{"bambu", "Bambu LAN"}, {"klipper", "Klipper / Moonraker"}, {"none", "Standalone"}};
+    for (size_t i = 0; i < sizeof(choices) / sizeof(choices[0]); ++i) {
+        cJSON *option = cJSON_CreateObject();
+        cJSON_AddStringToObject(option, "value", choices[i][0]);
+        cJSON_AddStringToObject(option, "label", choices[i][1]);
+        cJSON_AddItemToArray(options, option);
+    }
+    cJSON_AddItemToArray(sections, printer);
+
+    dc_bambu_config_t bambu = {0}; dc_bambu_get_config(&bambu);
+    cJSON *bambu_section = cJSON_CreateObject();
+    cJSON_AddStringToObject(bambu_section, "title", "Bambu LAN");
+    cJSON_AddStringToObject(bambu_section, "description", "Use the printer's LAN-mode access code. DragonStatus only reads printer state.");
+    visible_when(bambu_section, "source", "bambu");
+    fields = cJSON_AddArrayToObject(bambu_section, "fields");
+    setup_field(fields, "bambu_host", "Printer address", "text", bambu.host);
+    setup_field(fields, "bambu_serial", "Printer serial", "text", bambu.serial);
+    cJSON_AddBoolToObject(setup_field(fields, "bambu_code", "LAN access code", "text", ""), "secret", true);
+    cJSON_AddItemToArray(sections, bambu_section);
+
+    dc_moonraker_config_t moonraker = {0}; dc_moonraker_get_config(&moonraker);
+    char port[8]; snprintf(port, sizeof(port), "%u", moonraker.port ?: 7125);
+    cJSON *moonraker_section = cJSON_CreateObject();
+    cJSON_AddStringToObject(moonraker_section, "title", "Klipper / Moonraker");
+    visible_when(moonraker_section, "source", "klipper");
+    fields = cJSON_AddArrayToObject(moonraker_section, "fields");
+    setup_field(fields, "moonraker_host", "Moonraker address", "text", moonraker.host);
+    setup_field(fields, "moonraker_port", "Moonraker port", "number", port);
+    cJSON_AddBoolToObject(setup_field(fields, "moonraker_api_key", "API key", "text", ""), "secret", true);
+    cJSON_AddItemToArray(sections, moonraker_section);
+    return root;
+}
+
+static const char *string_value(const cJSON *values, const char *key)
+{
+    cJSON *item = cJSON_GetObjectItemCaseSensitive(values, key);
+    return cJSON_IsString(item) ? item->valuestring : NULL;
+}
+
+static esp_err_t apply_product(const cJSON *values, void *ctx, char *message, size_t message_size)
+{
+    (void)ctx;
+    const char *source_text = string_value(values, "source");
+    if (source_text) {
+        dc_ctl_source_t source = !strcmp(source_text, "bambu") ? DC_SRC_BAMBU :
+                                  !strcmp(source_text, "klipper") ? DC_SRC_KLIPPER : DC_SRC_NONE;
+        if (strcmp(source_text, "bambu") && strcmp(source_text, "klipper") && strcmp(source_text, "none")) {
+            snprintf(message, message_size, "Unknown printer source"); return ESP_ERR_INVALID_ARG;
+        }
+        ESP_RETURN_ON_ERROR(dc_source_set(source), "ds_portal", "save source");
+    }
+    const char *host = string_value(values, "bambu_host");
+    if (host) {
+        dc_bambu_config_t config = {0}; dc_bambu_get_config(&config);
+        snprintf(config.host, sizeof(config.host), "%s", host);
+        const char *serial = string_value(values, "bambu_serial"); if (serial) snprintf(config.serial, sizeof(config.serial), "%s", serial);
+        const char *code = string_value(values, "bambu_code"); if (code && *code) snprintf(config.code, sizeof(config.code), "%s", code);
+        ESP_RETURN_ON_ERROR(dc_bambu_set_config(&config), "ds_portal", "save Bambu");
+    }
+    host = string_value(values, "moonraker_host");
+    if (host) {
+        dc_moonraker_config_t config = {0}; dc_moonraker_get_config(&config);
+        snprintf(config.host, sizeof(config.host), "%s", host);
+        const char *port = string_value(values, "moonraker_port");
+        if (port && *port) { long parsed = strtol(port, NULL, 10); if (parsed < 1 || parsed > 65535) { snprintf(message, message_size, "Invalid Moonraker port"); return ESP_ERR_INVALID_ARG; } config.port = (uint16_t)parsed; }
+        const char *key = string_value(values, "moonraker_api_key"); if (key && *key) snprintf(config.api_key, sizeof(config.api_key), "%s", key);
+        ESP_RETURN_ON_ERROR(dc_moonraker_set_config(&config), "ds_portal", "save Moonraker");
+    }
+    snprintf(message, message_size, "Printer settings saved. Restart to apply the selected source.");
+    return ESP_OK;
 }
 
 static const char *wifi_state(dc_wifi_state_t state)
@@ -131,5 +246,7 @@ esp_err_t ds_portal_start(void)
         .display_name = "DragonStatus",
         .product_routes = s_routes,
         .product_route_count = sizeof(s_routes) / sizeof(s_routes[0]),
+        .describe_product = describe_product,
+        .apply_product = apply_product,
     });
 }
