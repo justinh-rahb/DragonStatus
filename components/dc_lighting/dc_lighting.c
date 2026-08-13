@@ -57,21 +57,30 @@ static void frame(uint32_t tick)
     for (uint8_t i = 0; i < s_count; ++i) {
         for (uint16_t p = 0; p < s_output[i].pixels; ++p) {
             dc_rgb_t c = base;
+            uint8_t pixel_level = level;
             if (s_effect == DC_LIGHTING_RAINBOW) hsv((uint16_t)(phase * 128 + p * (65536 / s_output[i].pixels)), &c);
             if (s_effect == DC_LIGHTING_FLOW) {
                 uint16_t head = (phase / 6) % s_output[i].pixels;
                 uint16_t distance = (p + s_output[i].pixels - head) % s_output[i].pixels;
                 uint8_t tail = distance < 6 ? (uint8_t)((6 - distance) * 255 / 6) : 0;
                 c = base;
-                level = scale(s_brightness, tail);
+                pixel_level = scale(s_brightness, tail);
+            }
+            if (s_effect == DC_LIGHTING_CYLON) {
+                uint16_t span = s_output[i].pixels > 1 ? (s_output[i].pixels - 1) * 2 : 1;
+                uint16_t travel = (phase / 8) % span;
+                uint16_t head = travel < s_output[i].pixels ? travel : span - travel;
+                uint16_t distance = p > head ? p - head : head - p;
+                uint8_t tail = distance < 5 ? (uint8_t)((5 - distance) * 255 / 5) : 0;
+                pixel_level = scale(s_brightness, tail);
             }
             if (s_effect == DC_LIGHTING_PROGRESS) {
                 bool lit = s_progress >= 0.0f && p < (uint16_t)(s_progress * s_output[i].pixels);
                 c = lit ? base : (dc_rgb_t){0, 0, 0};
-                level = lit ? s_brightness : 255;
+                pixel_level = lit ? s_brightness : 255;
             }
             uint16_t index = s_output[i].reverse ? s_output[i].pixels - 1 - p : p;
-            led_strip_set_pixel(s_strip[i], index, scale(c.r, level), scale(c.g, level), scale(c.b, level));
+            led_strip_set_pixel(s_strip[i], index, scale(c.r, pixel_level), scale(c.g, pixel_level), scale(c.b, pixel_level));
         }
         led_strip_refresh(s_strip[i]);
     }

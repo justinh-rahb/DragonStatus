@@ -65,6 +65,9 @@ void ds_lighting_update(ds_printer_state_t state, float progress)
     default: break;
     }
     (void)dc_lighting_set_progress(progress);
-    if (s_config.effect) { color = printing; fx = (dc_lighting_effect_t)s_config.effect; }
+    if (s_config.effect) {
+        fx = (dc_lighting_effect_t)s_config.effect;
+        color = fx == DC_LIGHTING_CYLON ? (dc_rgb_t){255, 0, 0} : printing;
+    }
     (void)dc_lighting_set(color, fx, s_config.speed);
 }

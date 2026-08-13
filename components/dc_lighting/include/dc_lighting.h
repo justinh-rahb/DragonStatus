@@ -19,6 +19,7 @@ typedef enum {
     DC_LIGHTING_BLINK,
     DC_LIGHTING_FLOW,
     DC_LIGHTING_PROGRESS,
+    DC_LIGHTING_CYLON,
 } dc_lighting_effect_t;
 
 typedef struct { uint8_t r, g, b; } dc_rgb_t;
