@@ -251,6 +251,9 @@ static esp_err_t state_get(httpd_req_t *req)
     cJSON *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "api_version", 2);
     cJSON_AddStringToObject(root, "project", "dragonstatus");
+    /* State drives the Status home screen; include the running app version so
+     * it remains visible even if the separate device-info request is delayed. */
+    cJSON_AddStringToObject(root, "firmware", esp_app_get_description()->version);
     cJSON *printer = cJSON_AddObjectToObject(root, "printer");
     cJSON_AddStringToObject(printer, "source", dc_source_str(dc_source_get()));
     cJSON_AddStringToObject(printer, "state", printer_state());
