@@ -5,7 +5,8 @@
 #include "esp_timer.h"
 #include "nvs.h"
 
-#define DS_LIGHT_NVS_NS "app_nvs"
+#define DS_LIGHT_NVS_NS "ds_lighting"
+#define DS_LIGHT_LEGACY_NVS_NS "app_nvs"
 #define DS_LIGHT_NVS_KEY "ds_lighting"
 static ds_lighting_config_t s_config = {
     .enabled = true,
@@ -20,16 +21,21 @@ static ds_lighting_config_t s_config = {
 
 void ds_lighting_get_config(ds_lighting_config_t *out) { if (out) *out = s_config; }
 
-esp_err_t ds_lighting_set_config(const ds_lighting_config_t *config)
+static esp_err_t store_config(void)
 {
-    if (!config) return ESP_ERR_INVALID_ARG;
-    s_config = *config;
     nvs_handle_t nvs;
     if (nvs_open(DS_LIGHT_NVS_NS, NVS_READWRITE, &nvs) != ESP_OK) return ESP_FAIL;
     esp_err_t err = nvs_set_blob(nvs, DS_LIGHT_NVS_KEY, &s_config, sizeof(s_config));
     if (err == ESP_OK) err = nvs_commit(nvs);
     nvs_close(nvs);
     return err;
+}
+
+esp_err_t ds_lighting_set_config(const ds_lighting_config_t *config)
+{
+    if (!config) return ESP_ERR_INVALID_ARG;
+    s_config = *config;
+    return store_config();
 }
 
 static const char *TAG = "ds_lighting";
@@ -54,9 +60,23 @@ static dc_lighting_effect_t renderer_effect(uint8_t effect)
 
 esp_err_t ds_lighting_start(void)
 {
-    nvs_handle_t nvs; size_t size = sizeof(s_config);
+    nvs_handle_t nvs;
+    size_t size = sizeof(s_config);
+    esp_err_t load_err = ESP_ERR_NVS_NOT_FOUND;
     if (nvs_open(DS_LIGHT_NVS_NS, NVS_READONLY, &nvs) == ESP_OK) {
-        (void)nvs_get_blob(nvs, DS_LIGHT_NVS_KEY, &s_config, &size); nvs_close(nvs);
+        load_err = nvs_get_blob(nvs, DS_LIGHT_NVS_KEY, &s_config, &size);
+        nvs_close(nvs);
+    }
+    if (load_err != ESP_OK) {
+        /* Pre-v0.2.3 Status builds stored the product lighting blob beside
+         * Core source/Wi-Fi data in app_nvs.  Copy it once, never erase it,
+         * and keep future Status-only settings isolated from shared keys. */
+        size = sizeof(s_config);
+        if (nvs_open(DS_LIGHT_LEGACY_NVS_NS, NVS_READONLY, &nvs) == ESP_OK) {
+            load_err = nvs_get_blob(nvs, DS_LIGHT_NVS_KEY, &s_config, &size);
+            nvs_close(nvs);
+        }
+        if (load_err == ESP_OK) (void)store_config();
     }
     /* Historic Status UI values were product choices, but were passed straight
      * to the renderer. Keeping those IDs as policy IDs fixes their offset. */
