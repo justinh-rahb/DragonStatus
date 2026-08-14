@@ -257,6 +257,13 @@ static esp_err_t state_get(httpd_req_t *req)
     cJSON *printer = cJSON_AddObjectToObject(root, "printer");
     cJSON_AddStringToObject(printer, "source", dc_source_str(dc_source_get()));
     cJSON_AddStringToObject(printer, "state", printer_state());
+    float progress = -1.0f;
+    if (dc_source_get() == DC_SRC_BAMBU) {
+        dc_bambu_status_t status = {0}; dc_bambu_get_status(&status); progress = status.progress;
+    } else if (dc_source_get() == DC_SRC_KLIPPER) {
+        dc_moonraker_status_t status = {0}; dc_moonraker_get_status(&status); progress = status.progress;
+    }
+    if (progress >= 0.0f) cJSON_AddNumberToObject(printer, "progress", progress);
     cJSON *wifi = cJSON_AddObjectToObject(root, "wifi");
     cJSON_AddStringToObject(wifi, "state", wifi_state(dc_wifi_state()));
     cJSON *lighting = cJSON_AddObjectToObject(root, "lighting");
