@@ -231,7 +231,9 @@ static const char *printer_state(void)
         case DC_BAMBU_PRINT_PAUSED:    return "paused";
         case DC_BAMBU_PRINT_COMPLETE:  return "complete";
         case DC_BAMBU_PRINT_ERROR:     return "error";
-        default: return status.connected ? "idle" : "unknown";
+        default:
+            return status.error ? "error" : status.printing ? "printing" :
+                   status.connected ? "idle" : "unknown";
         }
     }
     return "standalone";

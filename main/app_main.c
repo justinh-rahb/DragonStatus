@@ -22,7 +22,11 @@ static ds_printer_state_t bambu_printer_state(const dc_bambu_status_t *status)
     case DC_BAMBU_PRINT_COMPLETE:  return DS_PRINTER_COMPLETE;
     case DC_BAMBU_PRINT_ERROR:     return DS_PRINTER_ERROR;
     default:
-        return status->connected ? DS_PRINTER_IDLE : DS_PRINTER_UNKNOWN;
+        /* MQTT report deltas frequently omit gcode_state.  Core preserves the
+         * active/error flags across those deltas, so keep driving the last
+         * known print policy until a complete phase-bearing report arrives. */
+        return status->error ? DS_PRINTER_ERROR : status->printing ? DS_PRINTER_PRINTING :
+               status->connected ? DS_PRINTER_IDLE : DS_PRINTER_UNKNOWN;
     }
 }
 
