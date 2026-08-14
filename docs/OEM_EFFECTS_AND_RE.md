@@ -10,8 +10,10 @@ The Panda Status documentation describes two factory modes:
 | H2D | Unbound: blue flow. Idle/paused: white breathe. Downloading: yellow flow. Preparing: yellow-orange flow. Printing: a solid color filled to print progress. Complete: green hold, then idle. Error: red blink. |
 
 The 1.0.1 release notes extend the completion hold to 15 minutes and add a
-120-minute non-Music idle standby. DragonStatus will retain the behavior as
-configurable policy rather than hard-code it into the renderer.
+120-minute non-Music idle standby. DragonStatus retains both as configurable
+policy rather than hard-coding them into the renderer: they are the
+`complete_hold_min` and `standby_min` lighting settings, defaulting to the
+factory 15 and 120 minutes, and either is disabled by setting it to zero.
 
 ## Live OEM portal contract
 

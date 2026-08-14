@@ -38,7 +38,7 @@ The bootstrap firmware already includes:
 - Dragon Core Wi-Fi setup, captive AP fallback, stock-NVS migration, event log,
   Bambu LAN/MQTT, Moonraker, source selection, OTA, and browser portal;
 - the generic RMT/WS2812 renderer from Dragon Core's `dc_lighting`
-  component (currently pinned to Core `v0.16.6`);
+  component (currently pinned to Core `v0.19.0`);
 - DragonStatus printer-state-to-light-policy mapping in
   `components/ds_lighting`; and
 - a Status ES8311/I2S audio adapter in `components/ds_audio`, which supplies a
@@ -51,19 +51,32 @@ namespace. Existing installations are migrated once from the legacy shared
 `app_nvs` key, so changing a printer source cannot disturb the selected effect
 or palette.
 
-The current policy implements the documented factory H2D intent. Its OEM
-semantic palette is configurable as idle/paused, printing, and error; the
-unbound, preparing, and completion transitions retain their factory colours.
+The current policy implements the documented factory H2D intent, and every part
+of it is configurable. The factory colours below are the defaults; each printer
+state carries its own palette entry, and the animation per state is the factory
+policy until an effect override replaces it everywhere.
 
-| Printer state | Light behavior |
+| Printer state | Light behavior (default) |
 | --- | --- |
 | Not bound / unknown | Blue flow |
 | Downloading | Yellow flow |
 | Preparing | Yellow-orange flow |
 | Printing | White progress fill |
-| Idle or paused | White breathe |
-| Complete | Green |
+| Idle | White breathe |
+| Paused | White breathe |
+| Complete | Green, held for the completion time, then idle |
 | Error | Red blink |
+
+Two knobs shape the palette, matching DragonVent's lighting controls. *Colour
+follows* selects either the per-state palette or one fixed colour — an error
+keeps its own colour either way, so a fault stays recognisable. *Effect* stays
+on **Factory H2D** to keep the per-state animations above, or forces a single
+animation over every state. Brightness, effect speed, and strip direction apply
+as soon as they are saved.
+
+The two documented OEM 1.0.1 timers are settings rather than constants: the
+completion hold (15 minutes by default) and the non-Music idle standby that
+blanks the bar after a long idle (120 minutes by default). Zero disables either.
 
 Music mode remains a distinct audio-reactive policy: blue through red as sound
 level rises. In the shared renderer it is the canonical **Music meter** effect;

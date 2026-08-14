@@ -35,6 +35,15 @@ static cJSON *recv_json(httpd_req_t *req)
     body[got] = '\0'; return cJSON_Parse(body);
 }
 
+/* Every configurable palette entry, in one table so the GET and the POST cannot
+ * drift apart as the palette grows. */
+#define DS_LIGHTING_PALETTE(config) \
+    { {"idle", (config).idle_color}, {"printing", (config).printing_color}, {"error", (config).error_color}, \
+      {"fixed", (config).fixed_color}, {"unbound", (config).unbound_color}, {"downloading", (config).downloading_color}, \
+      {"preparing", (config).preparing_color}, {"paused", (config).paused_color}, {"complete", (config).complete_color} }
+
+typedef struct { const char *name; uint8_t *rgb; } ds_palette_entry_t;
+
 static cJSON *lighting_json(void)
 {
     ds_lighting_config_t config; ds_lighting_get_config(&config);
@@ -45,6 +54,10 @@ static cJSON *lighting_json(void)
     cJSON_AddNumberToObject(root, "brightness", config.brightness);
     cJSON_AddNumberToObject(root, "speed", config.speed);
     cJSON_AddNumberToObject(root, "effect", config.effect);
+    cJSON_AddNumberToObject(root, "mode", config.mode);
+    cJSON_AddBoolToObject(root, "reverse", config.reverse);
+    cJSON_AddNumberToObject(root, "complete_hold_min", config.complete_hold_min);
+    cJSON_AddNumberToObject(root, "standby_min", config.standby_min);
     cJSON_AddNumberToObject(root, "audio_level", ds_audio_get_level());
     cJSON *audio_json = cJSON_AddObjectToObject(root, "audio");
     cJSON_AddBoolToObject(audio_json, "codec_ready", audio.codec_ready);
@@ -54,11 +67,10 @@ static cJSON *lighting_json(void)
     cJSON_AddNumberToObject(audio_json, "capture_bytes", audio.capture_bytes);
     cJSON_AddNumberToObject(audio_json, "raw_level", audio.raw_level);
     cJSON_AddStringToObject(root, "profile", "factory_h2d");
-    const uint8_t *colors[] = {config.idle_color, config.printing_color, config.error_color};
-    const char *names[] = {"idle", "printing", "error"};
-    for (size_t i = 0; i < sizeof(colors) / sizeof(colors[0]); ++i) {
-        cJSON *color = cJSON_AddArrayToObject(root, names[i]);
-        for (size_t channel = 0; channel < 3; ++channel) cJSON_AddItemToArray(color, cJSON_CreateNumber(colors[i][channel]));
+    ds_palette_entry_t palette[] = DS_LIGHTING_PALETTE(config);
+    for (size_t i = 0; i < sizeof(palette) / sizeof(palette[0]); ++i) {
+        cJSON *color = cJSON_AddArrayToObject(root, palette[i].name);
+        for (size_t channel = 0; channel < 3; ++channel) cJSON_AddItemToArray(color, cJSON_CreateNumber(palette[i].rgb[channel]));
     }
     return root;
 }
@@ -73,10 +85,13 @@ static esp_err_t lighting_post(httpd_req_t *req)
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "brightness")) && cJSON_IsNumber(value)) config.brightness = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > 255 ? 255 : value->valueint);
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "speed")) && cJSON_IsNumber(value)) config.speed = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > 255 ? 255 : value->valueint);
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "effect")) && cJSON_IsNumber(value)) config.effect = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > DS_LIGHTING_MARQUEE ? DS_LIGHTING_MARQUEE : value->valueint);
-    uint8_t *colors[] = {config.idle_color, config.printing_color, config.error_color};
-    const char *names[] = {"idle", "printing", "error"};
-    for (size_t i = 0; i < sizeof(colors) / sizeof(colors[0]); ++i) {
-        cJSON *color = cJSON_GetObjectItemCaseSensitive(body, names[i]);
+    if ((value = cJSON_GetObjectItemCaseSensitive(body, "mode")) && cJSON_IsNumber(value)) config.mode = value->valueint == DS_LIGHT_MODE_FIXED ? DS_LIGHT_MODE_FIXED : DS_LIGHT_MODE_PRINTER;
+    if ((value = cJSON_GetObjectItemCaseSensitive(body, "reverse")) && cJSON_IsBool(value)) config.reverse = cJSON_IsTrue(value);
+    if ((value = cJSON_GetObjectItemCaseSensitive(body, "complete_hold_min")) && cJSON_IsNumber(value)) config.complete_hold_min = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > 255 ? 255 : value->valueint);
+    if ((value = cJSON_GetObjectItemCaseSensitive(body, "standby_min")) && cJSON_IsNumber(value)) config.standby_min = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > 255 ? 255 : value->valueint);
+    ds_palette_entry_t palette[] = DS_LIGHTING_PALETTE(config);
+    for (size_t i = 0; i < sizeof(palette) / sizeof(palette[0]); ++i) {
+        cJSON *color = cJSON_GetObjectItemCaseSensitive(body, palette[i].name);
         if (!color) continue;
         if (!cJSON_IsArray(color) || cJSON_GetArraySize(color) != 3) {
             cJSON_Delete(body); return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "invalid RGB colour");
@@ -86,7 +101,7 @@ static esp_err_t lighting_post(httpd_req_t *req)
             if (!cJSON_IsNumber(component) || component->valueint < 0 || component->valueint > 255) {
                 cJSON_Delete(body); return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "invalid RGB colour");
             }
-            colors[i][channel] = (uint8_t)component->valueint;
+            palette[i].rgb[channel] = (uint8_t)component->valueint;
         }
     }
     cJSON_Delete(body); if (ds_lighting_set_config(&config) != ESP_OK) return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "could not save lighting");
