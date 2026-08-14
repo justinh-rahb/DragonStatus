@@ -123,7 +123,10 @@ static bool music_enabled(void)
 {
     ds_lighting_config_t lighting;
     ds_lighting_get_config(&lighting);
-    return lighting.enabled && lighting.effect == DC_LIGHTING_AUDIO_METER;
+    /* Lighting settings use stable Status-facing IDs.  The renderer converts
+     * DS_LIGHTING_MUSIC to Core's DC_LIGHTING_AUDIO_METER; comparing those two
+     * different enums here left the capture task permanently dormant. */
+    return lighting.enabled && lighting.effect == DS_LIGHTING_MUSIC;
 }
 
 static esp_err_t capture_level(float *out)
