@@ -5,7 +5,7 @@
 #include "esp_timer.h"
 #include "nvs.h"
 
-#define DS_LIGHT_NVS_NS "ds_lighting"
+#define DS_LIGHT_NVS_NS "dragonstatus"
 #define DS_LIGHT_LEGACY_NVS_NS "app_nvs"
 #define DS_LIGHT_NVS_KEY "ds_lighting"
 static ds_lighting_config_t s_config = {
@@ -68,9 +68,9 @@ esp_err_t ds_lighting_start(void)
         nvs_close(nvs);
     }
     if (load_err != ESP_OK) {
-        /* Pre-v0.2.3 Status builds stored the product lighting blob beside
-         * Core source/Wi-Fi data in app_nvs.  Copy it once, never erase it,
-         * and keep future Status-only settings isolated from shared keys. */
+        /* Earlier Status builds stored the product lighting blob beside Core
+         * source/Wi-Fi data in app_nvs. Copy it once, never erase it, and keep
+         * future Status-only settings in DragonStatus's unique namespace. */
         size = sizeof(s_config);
         if (nvs_open(DS_LIGHT_LEGACY_NVS_NS, NVS_READONLY, &nvs) == ESP_OK) {
             load_err = nvs_get_blob(nvs, DS_LIGHT_NVS_KEY, &s_config, &size);
