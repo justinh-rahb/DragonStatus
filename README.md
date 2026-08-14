@@ -46,6 +46,11 @@ The bootstrap firmware already includes:
 - a board layer in `components/ds_board` with an explicit development-C3
   preview output plus the verified production Status RGB map.
 
+Status-only lighting settings are stored in their own `ds_lighting` NVS
+namespace. Existing installations are migrated once from the legacy shared
+`app_nvs` key, so changing a printer source cannot disturb the selected effect
+or palette.
+
 The current policy implements the documented factory H2D intent. Its OEM
 semantic palette is configurable as idle/paused, printing, and error; the
 unbound, preparing, and completion transitions retain their factory colours.
