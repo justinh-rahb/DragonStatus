@@ -77,6 +77,11 @@ as soon as they are saved.
 The two documented OEM 1.0.1 timers are settings rather than constants: the
 completion hold (15 minutes by default) and the non-Music idle standby that
 blanks the bar after a long idle (120 minutes by default). Zero disables either.
+Note that the standby is a behaviour change on upgrade rather than a preserved
+default: earlier DragonStatus builds documented it but never implemented it, so
+a unit left idle now goes dark where it previously kept breathing. A blanked
+bar wakes when the printer changes state, and when lighting settings are saved,
+so a change is always visible immediately.
 
 Music mode remains a distinct audio-reactive policy: blue through red as sound
 level rises. In the shared renderer it is the canonical **Music meter** effect;

@@ -62,6 +62,10 @@ esp_err_t ds_lighting_set_config(const ds_lighting_config_t *config)
 {
     if (!config) return ESP_ERR_INVALID_ARG;
     s_config = *config;
+    /* Standby only ends on a printer state change, so a bar already asleep
+     * would ignore the save and read as broken. Restart the idle countdown so
+     * the user sees the setting they just changed. */
+    s_idle_since_us = 0;
     apply_runtime_config();
     return store_config();
 }
