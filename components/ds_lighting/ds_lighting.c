@@ -33,19 +33,32 @@ esp_err_t ds_lighting_set_config(const ds_lighting_config_t *config)
 
 static const char *TAG = "ds_lighting";
 
+static dc_lighting_effect_t renderer_effect(uint8_t effect)
+{
+    switch ((ds_lighting_effect_t)effect) {
+    case DS_LIGHTING_SOLID: return DC_LIGHTING_SOLID;
+    case DS_LIGHTING_BREATHE: return DC_LIGHTING_BREATHE;
+    case DS_LIGHTING_RAINBOW: return DC_LIGHTING_RAINBOW;
+    case DS_LIGHTING_BLINK: return DC_LIGHTING_STROBE;
+    case DS_LIGHTING_FLOW: return DC_LIGHTING_FLOW;
+    case DS_LIGHTING_CYLON: return DC_LIGHTING_CYLON;
+    case DS_LIGHTING_MUSIC: return DC_LIGHTING_AUDIO_METER;
+    case DS_LIGHTING_CYCLE: return DC_LIGHTING_CYCLE;
+    case DS_LIGHTING_WAVE: return DC_LIGHTING_WAVE;
+    case DS_LIGHTING_MARQUEE: return DC_LIGHTING_MARQUEE;
+    default: return DC_LIGHTING_SOLID;
+    }
+}
+
 esp_err_t ds_lighting_start(void)
 {
     nvs_handle_t nvs; size_t size = sizeof(s_config);
     if (nvs_open(DS_LIGHT_NVS_NS, NVS_READONLY, &nvs) == ESP_OK) {
         (void)nvs_get_blob(nvs, DS_LIGHT_NVS_KEY, &s_config, &size); nvs_close(nvs);
     }
-    /* v0.1.0 displayed value 5 as Flow although the renderer reserved it for
-     * progress. Preserve the operator's intent before adopting Core's richer
-     * effect set; Cylon remains its stable value 6. The temporary local
-     * renderer used 7 for Music; Core assigns that slot to Cycle and keeps
-     * Music at 10, so migrate persisted Status settings on first boot. */
-    if (s_config.effect == DC_LIGHTING_PROGRESS) s_config.effect = DC_LIGHTING_FLOW;
-    if (s_config.effect == DC_LIGHTING_CYCLE) s_config.effect = DC_LIGHTING_AUDIO_METER;
+    /* Historic Status UI values were product choices, but were passed straight
+     * to the renderer. Keeping those IDs as policy IDs fixes their offset. */
+    if (s_config.effect > DS_LIGHTING_MARQUEE) s_config.effect = DS_LIGHTING_FACTORY_H2D;
     dc_lighting_output_t outputs[DC_LIGHTING_MAX_OUTPUTS]; uint8_t count = 0;
     if (!ds_board_lighting_outputs(outputs, &count)) {
         ESP_LOGW(TAG, "RGB output disabled until board pinout is verified");
@@ -72,8 +85,8 @@ void ds_lighting_update(ds_printer_state_t state, float progress)
     default: break;
     }
     (void)dc_lighting_set_progress(progress);
-    if (s_config.effect) {
-        fx = (dc_lighting_effect_t)s_config.effect;
+    if (s_config.effect != DS_LIGHTING_FACTORY_H2D) {
+        fx = renderer_effect(s_config.effect);
         color = fx == DC_LIGHTING_CYLON ? (dc_rgb_t){255, 0, 0} : printing;
     }
     (void)dc_lighting_set(color, fx, s_config.speed);

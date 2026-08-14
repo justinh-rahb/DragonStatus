@@ -72,7 +72,7 @@ static esp_err_t lighting_post(httpd_req_t *req)
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "enabled")) && cJSON_IsBool(value)) config.enabled = cJSON_IsTrue(value);
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "brightness")) && cJSON_IsNumber(value)) config.brightness = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > 255 ? 255 : value->valueint);
     if ((value = cJSON_GetObjectItemCaseSensitive(body, "speed")) && cJSON_IsNumber(value)) config.speed = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > 255 ? 255 : value->valueint);
-    if ((value = cJSON_GetObjectItemCaseSensitive(body, "effect")) && cJSON_IsNumber(value)) config.effect = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > DC_LIGHTING_AUDIO_METER ? DC_LIGHTING_AUDIO_METER : value->valueint);
+    if ((value = cJSON_GetObjectItemCaseSensitive(body, "effect")) && cJSON_IsNumber(value)) config.effect = (uint8_t)(value->valueint < 0 ? 0 : value->valueint > DS_LIGHTING_MARQUEE ? DS_LIGHTING_MARQUEE : value->valueint);
     uint8_t *colors[] = {config.idle_color, config.printing_color, config.error_color};
     const char *names[] = {"idle", "printing", "error"};
     for (size_t i = 0; i < sizeof(colors) / sizeof(colors[0]); ++i) {
