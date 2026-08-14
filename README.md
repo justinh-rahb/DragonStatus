@@ -38,7 +38,7 @@ The bootstrap firmware already includes:
 - Dragon Core Wi-Fi setup, captive AP fallback, stock-NVS migration, event log,
   Bambu LAN/MQTT, Moonraker, source selection, OTA, and browser portal;
 - the generic RMT/WS2812 renderer from Dragon Core's `dc_lighting`
-  component (currently pinned to Core `v0.16.2`);
+  component (currently pinned to Core `v0.16.6`);
 - DragonStatus printer-state-to-light-policy mapping in
   `components/ds_lighting`; and
 - a Status ES8311/I2S audio adapter in `components/ds_audio`, which supplies a
@@ -53,6 +53,7 @@ unbound, preparing, and completion transitions retain their factory colours.
 | Printer state | Light behavior |
 | --- | --- |
 | Not bound / unknown | Blue flow |
+| Downloading | Yellow flow |
 | Preparing | Yellow-orange flow |
 | Printing | White progress fill |
 | Idle or paused | White breathe |
@@ -60,10 +61,10 @@ unbound, preparing, and completion transitions retain their factory colours.
 | Error | Red blink |
 
 Music mode remains a distinct audio-reactive policy: blue through red as sound
-level rises. In the shared renderer it is the canonical **Music meter** effect
-(`10`); Status automatically migrates the temporary pre-Core local value (`7`)
-from existing NVS settings. The factory behavior and the evidence behind this
-mapping are recorded in [OEM effects and RE notes](docs/OEM_EFFECTS_AND_RE.md).
+level rises. In the shared renderer it is the canonical **Music meter** effect;
+Status exposes that renderer through its stable **Music meter** choice. The
+factory behavior and the evidence behind this mapping are recorded in [OEM
+effects and RE notes](docs/OEM_EFFECTS_AND_RE.md).
 
 ## Architecture
 

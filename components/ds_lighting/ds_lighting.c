@@ -87,6 +87,7 @@ void ds_lighting_update(ds_printer_state_t state, float progress)
     dc_rgb_t color = idle; dc_lighting_effect_t fx = DC_LIGHTING_SOLID;
     switch (state) {
     case DS_PRINTER_UNKNOWN:   color = (dc_rgb_t){0, 80, 255}; fx = DC_LIGHTING_FLOW; break;
+    case DS_PRINTER_DOWNLOADING: color = (dc_rgb_t){255, 221, 0}; fx = DC_LIGHTING_FLOW; break;
     case DS_PRINTER_PREPARING: color = (dc_rgb_t){248, 163, 35}; fx = DC_LIGHTING_FLOW; break;
     case DS_PRINTER_PRINTING:  color = printing; fx = progress >= 0.0f ? DC_LIGHTING_PROGRESS : DC_LIGHTING_SOLID; break;
     case DS_PRINTER_PAUSED:    color = idle; fx = DC_LIGHTING_BREATHE; break;

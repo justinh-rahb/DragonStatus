@@ -16,6 +16,7 @@ static ds_printer_state_t bambu_printer_state(const dc_bambu_status_t *status)
 {
     switch (status->print_state) {
     case DC_BAMBU_PRINT_IDLE:      return DS_PRINTER_IDLE;
+    case DC_BAMBU_PRINT_DOWNLOADING: return DS_PRINTER_DOWNLOADING;
     case DC_BAMBU_PRINT_PREPARING: return DS_PRINTER_PREPARING;
     case DC_BAMBU_PRINT_PRINTING:  return DS_PRINTER_PRINTING;
     case DC_BAMBU_PRINT_PAUSED:    return DS_PRINTER_PAUSED;
@@ -30,6 +31,19 @@ static ds_printer_state_t bambu_printer_state(const dc_bambu_status_t *status)
     }
 }
 
+static ds_printer_state_t moonraker_printer_state(dc_printer_state_t state)
+{
+    switch (state) {
+    case DC_PRINTER_IDLE:      return DS_PRINTER_IDLE;
+    case DC_PRINTER_PREPARING: return DS_PRINTER_PREPARING;
+    case DC_PRINTER_PRINTING:  return DS_PRINTER_PRINTING;
+    case DC_PRINTER_PAUSED:    return DS_PRINTER_PAUSED;
+    case DC_PRINTER_COMPLETE:  return DS_PRINTER_COMPLETE;
+    case DC_PRINTER_ERROR:     return DS_PRINTER_ERROR;
+    default:                   return DS_PRINTER_UNKNOWN;
+    }
+}
+
 static void update_lighting(void)
 {
     ds_printer_state_t state = DS_PRINTER_UNKNOWN;
@@ -40,7 +54,7 @@ static void update_lighting(void)
         progress = s.progress;
     } else if (dc_source_get() == DC_SRC_KLIPPER) {
         dc_moonraker_status_t s = {0}; dc_moonraker_get_status(&s);
-        state = (ds_printer_state_t)s.printer;
+        state = moonraker_printer_state(s.printer);
         progress = s.progress;
     }
     ds_lighting_update(state, progress);
