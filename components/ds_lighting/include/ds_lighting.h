@@ -24,19 +24,41 @@ typedef enum {
     DS_LIGHTING_MARQUEE = 10,
 } ds_lighting_effect_t;
 
+/* What the colour is taken from.  The effect field stays independent: a mode
+ * chooses the colour, an effect chooses the animation. */
+typedef enum {
+    DS_LIGHT_MODE_PRINTER = 0,  /* per-state palette below */
+    DS_LIGHT_MODE_FIXED = 1,    /* one colour for every state */
+} ds_lighting_mode_t;
+
 /* Stable product-side subset of DragonVent's lighting resource.  The generic
- * renderer owns animation; Status owns these OEM-policy defaults. */
+ * renderer owns animation; Status owns these OEM-policy defaults.
+ *
+ * NOTE: append new fields at the END — the loader tolerates a shorter stored
+ * blob (older installs keep their values; new fields take these defaults). */
 typedef struct {
     bool enabled;
     uint8_t brightness;
     uint8_t speed;
-    /* 0 retains OEM H2D policy; nonzero is a ds_lighting_effect_t override. */
+    /* 0 retains OEM H2D effect policy; nonzero is a ds_lighting_effect_t
+     * override applied to every state. */
     uint8_t effect;
-    /* OEM H2D exposes three semantic palette entries.  The documented
-     * unbound/preparing/completed colours remain factory-owned. */
+    /* OEM H2D exposes three semantic palette entries; the rest of the factory
+     * palette is documented policy and configurable in the tail below. */
     uint8_t idle_color[3];
     uint8_t printing_color[3];
     uint8_t error_color[3];
+    uint8_t mode;                  /* ds_lighting_mode_t */
+    uint8_t fixed_color[3];        /* mode == DS_LIGHT_MODE_FIXED */
+    uint8_t unbound_color[3];      /* no printer bound / state unknown */
+    uint8_t downloading_color[3];
+    uint8_t preparing_color[3];
+    uint8_t paused_color[3];
+    uint8_t complete_color[3];
+    bool reverse;                  /* reverse the strip for spatial effects */
+    /* Documented OEM 1.0.1 policy, kept configurable rather than hard-coded. */
+    uint8_t complete_hold_min;     /* 0 holds until the printer reports idle */
+    uint8_t standby_min;           /* idle blackout; 0 never sleeps */
 } ds_lighting_config_t;
 
 esp_err_t ds_lighting_start(void);
