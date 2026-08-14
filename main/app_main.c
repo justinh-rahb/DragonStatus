@@ -12,13 +12,27 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 
+static ds_printer_state_t bambu_printer_state(const dc_bambu_status_t *status)
+{
+    switch (status->print_state) {
+    case DC_BAMBU_PRINT_IDLE:      return DS_PRINTER_IDLE;
+    case DC_BAMBU_PRINT_PREPARING: return DS_PRINTER_PREPARING;
+    case DC_BAMBU_PRINT_PRINTING:  return DS_PRINTER_PRINTING;
+    case DC_BAMBU_PRINT_PAUSED:    return DS_PRINTER_PAUSED;
+    case DC_BAMBU_PRINT_COMPLETE:  return DS_PRINTER_COMPLETE;
+    case DC_BAMBU_PRINT_ERROR:     return DS_PRINTER_ERROR;
+    default:
+        return status->connected ? DS_PRINTER_IDLE : DS_PRINTER_UNKNOWN;
+    }
+}
+
 static void update_lighting(void)
 {
     ds_printer_state_t state = DS_PRINTER_UNKNOWN;
     float progress = -1.0f;
     if (dc_source_get() == DC_SRC_BAMBU) {
         dc_bambu_status_t s = {0}; dc_bambu_get_status(&s);
-        state = s.error ? DS_PRINTER_ERROR : s.printing ? DS_PRINTER_PRINTING : s.connected ? DS_PRINTER_IDLE : DS_PRINTER_UNKNOWN;
+        state = bambu_printer_state(&s);
         progress = s.progress;
     } else if (dc_source_get() == DC_SRC_KLIPPER) {
         dc_moonraker_status_t s = {0}; dc_moonraker_get_status(&s);

@@ -224,7 +224,15 @@ static const char *printer_state(void)
     if (dc_source_get() == DC_SRC_BAMBU) {
         dc_bambu_status_t status = {0};
         dc_bambu_get_status(&status);
-        return status.error ? "error" : status.printing ? "printing" : status.connected ? "idle" : "unknown";
+        switch (status.print_state) {
+        case DC_BAMBU_PRINT_IDLE:      return "idle";
+        case DC_BAMBU_PRINT_PREPARING: return "preparing";
+        case DC_BAMBU_PRINT_PRINTING:  return "printing";
+        case DC_BAMBU_PRINT_PAUSED:    return "paused";
+        case DC_BAMBU_PRINT_COMPLETE:  return "complete";
+        case DC_BAMBU_PRINT_ERROR:     return "error";
+        default: return status.connected ? "idle" : "unknown";
+        }
     }
     return "standalone";
 }

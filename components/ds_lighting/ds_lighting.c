@@ -2,6 +2,7 @@
 #include "ds_board.h"
 #include "dc_lighting.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "nvs.h"
 
 #define DS_LIGHT_NVS_NS "app_nvs"
@@ -32,6 +33,7 @@ esp_err_t ds_lighting_set_config(const ds_lighting_config_t *config)
 }
 
 static const char *TAG = "ds_lighting";
+static int64_t s_complete_since_us;
 
 static dc_lighting_effect_t renderer_effect(uint8_t effect)
 {
@@ -73,6 +75,15 @@ void ds_lighting_update(ds_printer_state_t state, float progress)
     dc_rgb_t idle = {s_config.idle_color[0], s_config.idle_color[1], s_config.idle_color[2]};
     dc_rgb_t printing = {s_config.printing_color[0], s_config.printing_color[1], s_config.printing_color[2]};
     dc_rgb_t error = {s_config.error_color[0], s_config.error_color[1], s_config.error_color[2]};
+    /* OEM finish indication is green for fifteen minutes, then returns to the
+     * normal idle breathing colour if the printer has not sent IDLE yet. */
+    if (state == DS_PRINTER_COMPLETE) {
+        int64_t now = esp_timer_get_time();
+        if (!s_complete_since_us) s_complete_since_us = now;
+        if (now - s_complete_since_us >= 15LL * 60LL * 1000000LL) state = DS_PRINTER_IDLE;
+    } else {
+        s_complete_since_us = 0;
+    }
     dc_rgb_t color = idle; dc_lighting_effect_t fx = DC_LIGHTING_SOLID;
     switch (state) {
     case DS_PRINTER_UNKNOWN:   color = (dc_rgb_t){0, 80, 255}; fx = DC_LIGHTING_FLOW; break;
