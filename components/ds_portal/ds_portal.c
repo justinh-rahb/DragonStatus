@@ -12,6 +12,7 @@
 #include "esp_app_desc.h"
 #include "esp_check.h"
 #include "esp_http_server.h"
+#include "esp_timer.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -67,6 +68,36 @@ static cJSON *lighting_json(void)
     cJSON_AddNumberToObject(audio_json, "capture_bytes", audio.capture_bytes);
     cJSON_AddNumberToObject(audio_json, "raw_level", audio.raw_level);
     cJSON_AddStringToObject(root, "profile", "factory_h2d");
+    /* Lighting health diagnostics. A dark bar with a healthy config is
+     * ambiguous from outside: the renderer may be failing every frame, the
+     * policy may be blanking deliberately, or the update loop may have stopped.
+     * These distinguish all three without serial access. */
+    dc_lighting_stats_t stats; dc_lighting_get_stats(&stats);
+    ds_lighting_stats_t policy_stats; ds_lighting_get_stats(&policy_stats);
+    cJSON *renderer = cJSON_AddObjectToObject(root, "renderer");
+    cJSON_AddNumberToObject(renderer, "frames", stats.frames);
+    cJSON_AddNumberToObject(renderer, "refresh_errors", stats.refresh_errors);
+    cJSON_AddNumberToObject(renderer, "pixel_errors", stats.pixel_errors);
+    cJSON_AddBoolToObject(renderer, "failing", stats.failing);
+    cJSON_AddStringToObject(renderer, "last_error", esp_err_to_name(stats.last_error));
+    cJSON_AddNumberToObject(renderer, "last_error_age_s",
+                            stats.last_error_us ? (double)((esp_timer_get_time() - stats.last_error_us) / 1000000LL) : -1);
+    cJSON_AddNumberToObject(renderer, "brightness", stats.brightness);
+    cJSON_AddNumberToObject(renderer, "effect", stats.effect);
+    cJSON *painted = cJSON_AddArrayToObject(renderer, "color");
+    cJSON_AddItemToArray(painted, cJSON_CreateNumber(stats.color.r));
+    cJSON_AddItemToArray(painted, cJSON_CreateNumber(stats.color.g));
+    cJSON_AddItemToArray(painted, cJSON_CreateNumber(stats.color.b));
+    cJSON *policy = cJSON_AddObjectToObject(root, "policy");
+    cJSON_AddNumberToObject(policy, "updates", policy_stats.updates);
+    cJSON_AddBoolToObject(policy, "standby_blanking", policy_stats.standby_blanking);
+    cJSON_AddBoolToObject(policy, "disabled_blanking", policy_stats.disabled_blanking);
+    cJSON_AddNumberToObject(policy, "resting_s", policy_stats.resting_s);
+    cJSON_AddNumberToObject(policy, "complete_s", policy_stats.complete_s);
+    cJSON_AddNumberToObject(policy, "state", policy_stats.last_state);
+    cJSON_AddNumberToObject(policy, "effect", policy_stats.last_effect);
+    cJSON *resolved = cJSON_AddArrayToObject(policy, "color");
+    for (size_t i = 0; i < 3; ++i) cJSON_AddItemToArray(resolved, cJSON_CreateNumber(policy_stats.last_color[i]));
     ds_palette_entry_t palette[] = DS_LIGHTING_PALETTE(config);
     for (size_t i = 0; i < sizeof(palette) / sizeof(palette[0]); ++i) {
         cJSON *color = cJSON_AddArrayToObject(root, palette[i].name);

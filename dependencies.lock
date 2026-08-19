@@ -1,6 +1,6 @@
 dependencies:
   dc_bambu:
-    component_hash: f8296da247289b7ccf22e2dd2fc60af4d2bfff126c4e3b68d4bb368355797ccc
+    component_hash: db62148ded2153614b5ed68820efb516a997dbe1f51327b6875cf688f03dcc4c
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -8,9 +8,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_bambu
       type: git
-    version: 082cc81bfb351afde3e1b2624dd85e39310ccdbf
+    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
   dc_evlog:
-    component_hash: 08646d55db8f1f3ad2b7c3a7d69dc3ffb5fc793b02ded3fdc3f79701a20a53e5
+    component_hash: 7225b3052dcba2dbf719f0c03fde85a04deb434183fd40bb6cb271075ccefcfc
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -18,9 +18,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_evlog
       type: git
-    version: 082cc81bfb351afde3e1b2624dd85e39310ccdbf
+    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
   dc_lighting:
-    component_hash: 05836664a1e9fe852dc9cb0e9516f1c12442bafc782d8e294b7b0db9160e95a0
+    component_hash: 4e3e20f74f449d6171b92575a8d11919121e3c458d2429586594118397bc9ac9
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -30,9 +30,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_lighting
       type: git
-    version: 082cc81bfb351afde3e1b2624dd85e39310ccdbf
+    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
   dc_moonraker:
-    component_hash: 8f870d7977069032f04bfaec8c9bbcda6c3e220dcff989e882a0bee8d106fb58
+    component_hash: c553c84bcf96873e9970ca3411f5947ce9ffc89799885edfed2d4339d8e45feb
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -42,9 +42,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_moonraker
       type: git
-    version: 082cc81bfb351afde3e1b2624dd85e39310ccdbf
+    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
   dc_portal:
-    component_hash: 369e08c07090eae6f968140bdf11abe75e18719081a71f30b8c114f04b0f095b
+    component_hash: a7badb4cc39deab613c3686eee2e4dda66738e03da6181138d17816207a37053
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -52,7 +52,7 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_portal
       type: git
-    version: 082cc81bfb351afde3e1b2624dd85e39310ccdbf
+    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
   dc_source:
     component_hash: 673fa10f33be5721433e83b423fefb4b5c89700c38bbb79440c3e5e690f1c557
     dependencies:
@@ -62,9 +62,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_source
       type: git
-    version: 082cc81bfb351afde3e1b2624dd85e39310ccdbf
+    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
   dc_ui:
-    component_hash: 137820b8caf11f08972dadd6bdd5f63edae74d8a384cd26fd98da284333beafa
+    component_hash: 708bf0fde3393a802663194877350f38609f77606d26e23d836dcb4fc25b7cbb
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -72,9 +72,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_ui
       type: git
-    version: 082cc81bfb351afde3e1b2624dd85e39310ccdbf
+    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
   dc_wifi:
-    component_hash: a92bd375e543a9ac070e2e35cf9aa67b1230736b4d37569149b5f68b5ae62ede
+    component_hash: f30931e0b92ec20aeeb62ed73d14fc00ae6744d19eadde8bb7c0716ea3f7ae65
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -84,7 +84,7 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_wifi
       type: git
-    version: 082cc81bfb351afde3e1b2624dd85e39310ccdbf
+    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
   espressif/es8311:
     component_hash: 46b3117250344bb03f143d5e2becf81cfb111679fbd7b95cefc2d302d36cc393
     dependencies:
@@ -141,6 +141,6 @@ direct_dependencies:
 - espressif/es8311
 - espressif/led_strip
 - idf
-manifest_hash: 279701add1bc768215eae91ecaa0765dfa358c6a3d313efccbb836e6d9fadabe
+manifest_hash: d5d166289ebb34ee48b340f6f531af6bd03de163d9b3c4ef40cd04a9d8559bd3
 target: esp32c3
 version: 2.0.0

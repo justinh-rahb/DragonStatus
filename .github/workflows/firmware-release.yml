@@ -61,6 +61,13 @@ jobs:
           topology-aware WS2812 renderer and supports both 25-pixel Panda Status
           and 27-pixel PopStatus bars.
 
+          ### Included
+
+          - Bambu LAN/MQTT and Klipper/Moonraker printer-state integration
+          - Configurable factory-style status, progress, error, and Music-meter effects
+          - Browser provisioning, lighting controls, event log, and OTA maintenance
+          - Renderer and policy health counters in `/api/v2/lighting`
+
           ### Install or update over Wi-Fi
 
           1. Keep a private stock backup before your first install.
@@ -74,7 +81,10 @@ jobs:
           EOF
 
           flags=(--title "DragonStatus ${RELEASE_TAG}" --notes-file release_notes.md)
-          case "$RELEASE_TAG" in *-*) flags+=(--prerelease);; esac
+          case "$RELEASE_TAG" in
+            *-*) flags+=(--prerelease);;
+            *) flags+=(--latest);;
+          esac
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" dist/* --clobber
             gh release edit "$RELEASE_TAG" "${flags[@]}"

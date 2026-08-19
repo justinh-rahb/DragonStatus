@@ -61,6 +61,23 @@ typedef struct {
     uint8_t standby_min;           /* idle blackout; 0 never sleeps */
 } ds_lighting_config_t;
 
+/* Policy health. The renderer can be perfectly alive while the policy either
+ * stops being driven or deliberately blanks the strip; from outside both look
+ * like a dark bar with a healthy config. These expose which, and how long the
+ * two OEM timers have been running. */
+typedef struct {
+    uint32_t updates;          /* ds_lighting_update() calls since boot */
+    bool standby_blanking;     /* the last update blanked the strip for standby */
+    bool disabled_blanking;    /* ...or because lighting is switched off */
+    uint32_t resting_s;        /* seconds in the current idle window, 0 if awake */
+    uint32_t complete_s;       /* seconds since the completion hold began */
+    uint8_t last_state;        /* ds_printer_state_t after hold/standby policy */
+    uint8_t last_effect;       /* dc_lighting_effect_t handed to the renderer */
+    uint8_t last_color[3];
+} ds_lighting_stats_t;
+
+void ds_lighting_get_stats(ds_lighting_stats_t *out);
+
 esp_err_t ds_lighting_start(void);
 void ds_lighting_update(ds_printer_state_t state, float progress);
 /* Board audio adapter supplies its filtered 0..1 level here. */

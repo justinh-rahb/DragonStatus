@@ -11,10 +11,10 @@ their enclosures and possible LED-strip-length differences. DragonStatus keeps
 the familiar factory status-light experience, then adds the Dragon family's
 printer integrations, configuration experience, and long-term maintainability.
 
-> **Early firmware:** the project preserves the factory flash contract. The
-> production RGB output and ES8311 microphone path have been recovered and
-> validated on Panda Status hardware; keep a private stock backup before
-> installing experimental builds.
+> **Hardware status:** the production RGB output and ES8311 microphone path
+> have been recovered and validated on Panda Status hardware. DragonStatus
+> preserves the factory flash contract; keep a private stock backup before the
+> first installation so the original firmware remains recoverable.
 
 ## Goals
 
@@ -38,7 +38,7 @@ The bootstrap firmware already includes:
 - Dragon Core Wi-Fi setup, captive AP fallback, stock-NVS migration, event log,
   Bambu LAN/MQTT, Moonraker, source selection, OTA, and browser portal;
 - the generic RMT/WS2812 renderer from Dragon Core's `dc_lighting`
-  component (currently pinned to Core `v0.19.0`);
+  component (currently pinned to Core `v0.23.0`);
 - DragonStatus printer-state-to-light-policy mapping in
   `components/ds_lighting`; and
 - a Status ES8311/I2S audio adapter in `components/ds_audio`, which supplies a
@@ -89,6 +89,11 @@ Status exposes that renderer through its stable **Music meter** choice. The
 factory behavior and the evidence behind this mapping are recorded in [OEM
 effects and RE notes](docs/OEM_EFFECTS_AND_RE.md).
 
+`/api/v2/lighting` also reports renderer frame/error counters and the resolved
+Status policy state. These diagnostics distinguish an LED-driver failure from
+intentional standby/disabled blanking or a stalled policy update loop without
+requiring a serial console.
+
 ## Architecture
 
 ```text
@@ -126,11 +131,13 @@ DragonStatus uses the stock layout:
 | Application 1 | `0x200000` | `0x1f0000` |
 | Core dump | `0x3f0000` | `0x1000` |
 
-The intended installation path is an application-only update using the stock
-bootloader and partition table. Existing NVS data is preserved; stock RGB
-namespaces are specifically left alone until their binary formats are decoded.
-Never erase the full flash or overwrite the bootloader/partition table as part
-of normal DragonStatus installation.
+The installation path is an application-only OTA update using the stock
+bootloader and partition table. Download the `dragonstatus-v*-ota.bin` artifact
+from a GitHub release and upload it through the stock firmware-update page or
+**Device setup → Maintenance** on DragonStatus. Existing NVS data is preserved;
+stock RGB namespaces are specifically left alone until their binary formats
+are decoded. Never erase the full flash or overwrite the bootloader/partition
+table as part of normal DragonStatus installation.
 
 ## Backing up a PopStatus safely
 
@@ -183,8 +190,9 @@ topology firmware uses approximately 56% of one slot.
 
 The generated ESP-IDF flash command includes bootloader and partition artifacts
 for development convenience. It is **not** the normal stock-device installation
-procedure; production flashing instructions will be added only after hardware
-validation and an OTA package flow are complete.
+procedure. Tagged releases build the production Status target and publish an
+application-only OTA image plus `SHA256SUMS.txt`; use that OTA image for stock
+hardware.
 
 ## Reverse engineering status
 
