@@ -8,6 +8,10 @@
 #include <stddef.h>
 #include <string.h>
 
+/* Policy settings are stored in minutes; keep the conversion named so the
+ * completion and standby paths cannot silently drift apart. */
+#define DS_LIGHTING_MINUTE_US (60LL * 1000000LL)
+
 #define DS_LIGHT_NVS_NS "dragonstatus"
 #define DS_LIGHT_LEGACY_NVS_NS "app_nvs"
 #define DS_LIGHT_NVS_KEY "ds_lighting"
@@ -48,6 +52,9 @@ static const char *TAG = "ds_lighting";
 static int64_t s_complete_since_us;
 static int64_t s_idle_since_us;
 static uint8_t s_output_count;
+static ds_lighting_stats_t s_stats;
+
+void ds_lighting_get_stats(ds_lighting_stats_t *out) { if (out) *out = s_stats; }
 
 /* Brightness and strip direction live in the renderer, so a saved change has to
  * be pushed there as well as persisted; otherwise it only appears after a
@@ -141,14 +148,17 @@ esp_err_t ds_lighting_start(void)
 
 void ds_lighting_update(ds_printer_state_t state, float progress)
 {
-    if (!s_config.enabled) { (void)dc_lighting_off(); return; }
+    ++s_stats.updates;
+    s_stats.standby_blanking = false;
+    s_stats.disabled_blanking = false;
+    if (!s_config.enabled) { s_stats.disabled_blanking = true; (void)dc_lighting_off(); return; }
     int64_t now = esp_timer_get_time();
     /* OEM finish indication holds the completion colour, then returns to the
      * normal idle breathing colour if the printer has not sent IDLE yet. */
     if (state == DS_PRINTER_COMPLETE) {
         if (!s_complete_since_us) s_complete_since_us = now;
         if (s_config.complete_hold_min &&
-            now - s_complete_since_us >= (int64_t)s_config.complete_hold_min * 60LL * 1000000LL) state = DS_PRINTER_IDLE;
+            now - s_complete_since_us >= (int64_t)s_config.complete_hold_min * DS_LIGHTING_MINUTE_US) state = DS_PRINTER_IDLE;
     } else {
         s_complete_since_us = 0;
     }
@@ -157,8 +167,12 @@ void ds_lighting_update(ds_printer_state_t state, float progress)
     bool resting = state == DS_PRINTER_IDLE || state == DS_PRINTER_UNKNOWN;
     if (!resting) s_idle_since_us = 0;
     else if (!s_idle_since_us) s_idle_since_us = now;
+    s_stats.resting_s = resting && s_idle_since_us ? (uint32_t)((now - s_idle_since_us) / 1000000LL) : 0;
+    s_stats.complete_s = s_complete_since_us ? (uint32_t)((now - s_complete_since_us) / 1000000LL) : 0;
     if (resting && s_config.standby_min && s_config.effect != DS_LIGHTING_MUSIC &&
-        now - s_idle_since_us >= (int64_t)s_config.standby_min * 60LL * 1000000LL) {
+        now - s_idle_since_us >= (int64_t)s_config.standby_min * DS_LIGHTING_MINUTE_US) {
+        s_stats.standby_blanking = true;
+        s_stats.last_state = (uint8_t)state;
         (void)dc_lighting_off();
         return;
     }
@@ -182,6 +196,9 @@ void ds_lighting_update(ds_printer_state_t state, float progress)
     dc_rgb_t color = {palette[0], palette[1], palette[2]};
     (void)dc_lighting_set_progress(progress);
     if (s_config.effect != DS_LIGHTING_FACTORY_H2D) fx = renderer_effect(s_config.effect);
+    s_stats.last_state = (uint8_t)state;
+    s_stats.last_effect = (uint8_t)fx;
+    s_stats.last_color[0] = color.r; s_stats.last_color[1] = color.g; s_stats.last_color[2] = color.b;
     (void)dc_lighting_set(color, fx, s_config.speed);
 }
 
