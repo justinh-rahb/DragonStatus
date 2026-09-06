@@ -1,0 +1,40 @@
+name: Firmware Build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }} firmware
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: development C3
+            build_dir: build-dev
+            profile: ""
+          - name: production Status
+            build_dir: build-status
+            profile: status
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build firmware
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.3.1
+          target: esp32c3
+          path: .
+          command: bash tools/idf-build.sh . esp32c3 ${{ matrix.build_dir }} ${{ matrix.profile }}

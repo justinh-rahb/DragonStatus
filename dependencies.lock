@@ -1,6 +1,6 @@
 dependencies:
   dc_bambu:
-    component_hash: db62148ded2153614b5ed68820efb516a997dbe1f51327b6875cf688f03dcc4c
+    component_hash: 21e042054a8189d89af51daf19fb24e7026d56a3454a34b029a2c86b0f340a80
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -8,9 +8,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_bambu
       type: git
-    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
+    version: e7c06235a2f9ea4215d98924ff8b5a9b354c63a7
   dc_evlog:
-    component_hash: 7225b3052dcba2dbf719f0c03fde85a04deb434183fd40bb6cb271075ccefcfc
+    component_hash: bd1f8aef8bc64fb0fcf55fe305d595d373c183f25481e9249a023f9262e078d1
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -18,9 +18,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_evlog
       type: git
-    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
+    version: e7c06235a2f9ea4215d98924ff8b5a9b354c63a7
   dc_lighting:
-    component_hash: 4e3e20f74f449d6171b92575a8d11919121e3c458d2429586594118397bc9ac9
+    component_hash: 650105399109fe8d3d1fd173cf8f4a50032e44e7a1e309808a1beb7ea5f18c2c
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -30,9 +30,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_lighting
       type: git
-    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
+    version: e7c06235a2f9ea4215d98924ff8b5a9b354c63a7
   dc_moonraker:
-    component_hash: c553c84bcf96873e9970ca3411f5947ce9ffc89799885edfed2d4339d8e45feb
+    component_hash: 1b1696e49616a5c2045a57aef2bcfc7451333d30f6d94c542d7154ef5e7778f6
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -42,9 +42,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_moonraker
       type: git
-    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
+    version: e7c06235a2f9ea4215d98924ff8b5a9b354c63a7
   dc_portal:
-    component_hash: a7badb4cc39deab613c3686eee2e4dda66738e03da6181138d17816207a37053
+    component_hash: 7de0e94eacbbbb3556ef2c3acd47051acdaf6db3dda9d66c0f0f1d128e2d3395
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -52,9 +52,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_portal
       type: git
-    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
+    version: e7c06235a2f9ea4215d98924ff8b5a9b354c63a7
   dc_source:
-    component_hash: 673fa10f33be5721433e83b423fefb4b5c89700c38bbb79440c3e5e690f1c557
+    component_hash: ca5d7a04595a463dc25ab7b7713aa61b9afeba7cb60e8b68164961c8d58efca5
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -62,9 +62,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_source
       type: git
-    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
+    version: e7c06235a2f9ea4215d98924ff8b5a9b354c63a7
   dc_ui:
-    component_hash: 708bf0fde3393a802663194877350f38609f77606d26e23d836dcb4fc25b7cbb
+    component_hash: 65df983f7faa07bb586422d392101e2cf7ad4ec8015a56eaa5edd85374576187
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -72,9 +72,9 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_ui
       type: git
-    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
+    version: e7c06235a2f9ea4215d98924ff8b5a9b354c63a7
   dc_wifi:
-    component_hash: f30931e0b92ec20aeeb62ed73d14fc00ae6744d19eadde8bb7c0716ea3f7ae65
+    component_hash: 4094ba681bc9d55b1e4b35918e86f2f8715d766021e1abbe9f4de6a9870a51cf
     dependencies:
     - name: idf
       version: '>=5.3'
@@ -84,7 +84,7 @@ dependencies:
       git: https://github.com/justinh-rahb/dragon-core.git
       path: components/dc_wifi
       type: git
-    version: 8d0ba8e5438e3703ba4bafd8e5d75d2c7c4d87a3
+    version: e7c06235a2f9ea4215d98924ff8b5a9b354c63a7
   espressif/es8311:
     component_hash: 46b3117250344bb03f143d5e2becf81cfb111679fbd7b95cefc2d302d36cc393
     dependencies:
@@ -116,7 +116,7 @@ dependencies:
       type: service
     version: 2.5.5
   espressif/mdns:
-    component_hash: e81ca7a7f53ea34e78274df054da692c272e1315572876b237b1748e267c013b
+    component_hash: 3ba256ac95e07c274be53cbd73f06cb846c403b61e8fbdf1be57bdb79db7a63e
     dependencies:
     - name: idf
       require: private
@@ -124,7 +124,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.11.3
+    version: 1.12.0
   idf:
     source:
       type: idf
@@ -141,6 +141,6 @@ direct_dependencies:
 - espressif/es8311
 - espressif/led_strip
 - idf
-manifest_hash: d5d166289ebb34ee48b340f6f531af6bd03de163d9b3c4ef40cd04a9d8559bd3
+manifest_hash: 74a4ee74d7cb6a14ded4856f6cf237b01e3c72e3b2e04863d3fa5e49ef8d632b
 target: esp32c3
 version: 2.0.0

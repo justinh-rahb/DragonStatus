@@ -38,7 +38,7 @@ The bootstrap firmware already includes:
 - Dragon Core Wi-Fi setup, captive AP fallback, stock-NVS migration, event log,
   Bambu LAN/MQTT, Moonraker, source selection, OTA, and browser portal;
 - the generic RMT/WS2812 renderer from Dragon Core's `dc_lighting`
-  component (currently pinned to Core `v0.23.0`);
+  component (currently pinned to Core `v0.33.0`);
 - DragonStatus printer-state-to-light-policy mapping in
   `components/ds_lighting`; and
 - a Status ES8311/I2S audio adapter in `components/ds_audio`, which supplies a
@@ -186,7 +186,7 @@ tools/idf-build.sh . esp32c3 build
 
 The resulting application image is `build/dragonstatus.bin`. The build is
 checked against the stock-sized `0x1f0000` application slots. The shared-
-topology firmware uses approximately 56% of one slot.
+topology firmware uses approximately 57% of one slot.
 
 The generated ESP-IDF flash command includes bootloader and partition artifacts
 for development convenience. It is **not** the normal stock-device installation
@@ -232,3 +232,7 @@ Keep reusable functionality in `dc_*` components and DragonStatus-specific
 work in `ds_*` components. When changing board behavior, record the supporting
 firmware or hardware evidence in `docs/`; do not turn an unverified pinout into
 a default.
+
+## License
+
+DragonStatus is available under the [MIT License](LICENSE).
