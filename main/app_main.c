@@ -6,6 +6,7 @@
 #include "ds_lighting.h"
 #include "ds_audio.h"
 #include "ds_portal.h"
+#include "ds_peer.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -58,6 +59,7 @@ static void update_lighting(void)
         progress = s.progress;
     }
     ds_lighting_update(state, progress);
+    ds_peer_update(state, progress);
 }
 
 /* The stock device is Bambu-bound.  dc_wifi migrates its Bambu credentials on
@@ -89,6 +91,11 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_err);
     dc_evlog_console_init(); dc_evlog_init(); dc_evlog_add("DragonStatus boot");
     ESP_ERROR_CHECK(dc_wifi_set_identity(&(dc_wifi_identity_t){ .hostname = "dragonstatus", .instance_name = "DragonStatus", .ap_ssid_prefix = "DragonStatus_", .ap_password = DC_WIFI_DEFAULT_AP_PASSWORD }));
+#if !CONFIG_DS_BOARD_STATUS_PRODUCTION
+    /* The compact development C3 has the same weak-PCB-antenna behavior as the
+     * SuperMini. Production Status hardware keeps Core's standard radio profile. */
+    ESP_ERROR_CHECK(dc_wifi_set_radio_profile(DC_WIFI_RADIO_CONSTRAINED));
+#endif
     ESP_ERROR_CHECK(dc_wifi_start());
     select_migrated_source();
     switch (dc_source_get()) {
@@ -97,6 +104,7 @@ void app_main(void)
     default: break;
     }
     ESP_ERROR_CHECK(ds_lighting_start());
+    ESP_ERROR_CHECK(ds_peer_start());
     ESP_ERROR_CHECK(ds_audio_start());
     ESP_ERROR_CHECK(ds_portal_start());
     for (;;) { update_lighting(); vTaskDelay(pdMS_TO_TICKS(500)); }

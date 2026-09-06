@@ -31,5 +31,9 @@ dependencies:
     git: https://github.com/justinh-rahb/dragon-core.git
     path: components/dc_lighting
     version: v0.33.0
+  dc_peer:
+    git: https://github.com/justinh-rahb/dragon-core.git
+    path: components/dc_peer
+    version: v0.34.0
   espressif/led_strip: "^2.5.3"
   espressif/es8311: "^1.0.0"

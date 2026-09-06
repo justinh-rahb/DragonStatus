@@ -40,7 +40,9 @@ The bootstrap firmware already includes:
 - the generic RMT/WS2812 renderer from Dragon Core's `dc_lighting`
   component (currently pinned to Core `v0.33.0`);
 - DragonStatus printer-state-to-light-policy mapping in
-  `components/ds_lighting`; and
+  `components/ds_lighting`;
+- read-only Dragon-family discovery and lighting telemetry over Core's
+  ESP-NOW capability plane, for consoles such as DragonTouch;
 - a Status ES8311/I2S audio adapter in `components/ds_audio`, which supplies a
   normalized microphone level to the reusable Core audio-meter renderer; and
 - a board layer in `components/ds_board` with an explicit development-C3
