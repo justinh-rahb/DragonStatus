@@ -43,6 +43,16 @@ dependencies:
       path: components/dc_moonraker
       type: git
     version: e7c06235a2f9ea4215d98924ff8b5a9b354c63a7
+  dc_peer:
+    component_hash: c8caf7bb12dc7d6c59ccc1555e789ea3a5e561136092902f979fde1688aacc12
+    dependencies:
+    - name: idf
+      version: '>=5.3'
+    source:
+      git: https://github.com/justinh-rahb/dragon-core.git
+      path: components/dc_peer
+      type: git
+    version: 11ac2949603b21405757b79ab1b0256efd15d84a
   dc_portal:
     component_hash: 7de0e94eacbbbb3556ef2c3acd47051acdaf6db3dda9d66c0f0f1d128e2d3395
     dependencies:
@@ -134,6 +144,7 @@ direct_dependencies:
 - dc_evlog
 - dc_lighting
 - dc_moonraker
+- dc_peer
 - dc_portal
 - dc_source
 - dc_ui
@@ -141,6 +152,6 @@ direct_dependencies:
 - espressif/es8311
 - espressif/led_strip
 - idf
-manifest_hash: 74a4ee74d7cb6a14ded4856f6cf237b01e3c72e3b2e04863d3fa5e49ef8d632b
+manifest_hash: c2d70af3566418ff4f75f04c3508e94a3112d19454075443f34247ffadf4d9da
 target: esp32c3
 version: 2.0.0
